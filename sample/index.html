@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>樣本結構分析</title>
+<meta name="description" content="上傳問卷資料整理器的 Excel 檔，整理資料蒐集期間、回收與有效問卷份數、次數分配與複選題勾選率，產生樣本結構表與 AI 報告指令。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#f5f3ee; --surface:#ffffff; --surface-2:#faf8f3; --border:#ddd7c9; --border-strong:#c7bea9;
+  --ink:#232019; --ink-soft:#655e4d; --ink-faint:#8f886f;
+  --accent:#28594f; --accent-strong:#1b4139; --accent-soft:#e1ece7; --accent-contrast:#ffffff;
+  --warn:#95591b; --warn-soft:#f6ecda; --danger:#9c3b3b; --danger-soft:#f7e6e4;
+  --good:#3c6e3f; --good-soft:#e7f0e2; --pos:#1f6b55; --neg:#a24a3a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141612; --surface:#1c1f1a; --surface-2:#20241e; --border:#373d33; --border-strong:#4a5140;
+    --ink:#eae7dc; --ink-soft:#b7b3a1; --ink-faint:#847e69;
+    --accent:#79bda7; --accent-strong:#9bd2bf; --accent-soft:#213b34; --accent-contrast:#0c1210;
+    --warn:#dba064; --warn-soft:#3b2c19; --danger:#e08e8e; --danger-soft:#3c2320;
+    --good:#94c286; --good-soft:#25361f; --pos:#8fd0b8; --neg:#ec9d8c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141612; --surface:#1c1f1a; --surface-2:#20241e; --border:#373d33; --border-strong:#4a5140;
+  --ink:#eae7dc; --ink-soft:#b7b3a1; --ink-faint:#847e69;
+  --accent:#79bda7; --accent-strong:#9bd2bf; --accent-soft:#213b34; --accent-contrast:#0c1210;
+  --warn:#dba064; --warn-soft:#3b2c19; --danger:#e08e8e; --danger-soft:#3c2320;
+  --good:#94c286; --good-soft:#25361f; --pos:#8fd0b8; --neg:#ec9d8c;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.7}
+.toolbox-back{display:block;padding:10px 16px;font:500 14px/1.4 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:#ffffffcc;border-bottom:1px solid #ddd7c9}
+.toolbox-back a{color:#28594f;text-decoration:none}
+.toolbox-back a:hover{text-decoration:underline}
+@media (prefers-color-scheme:dark){.toolbox-back{background:#1c1f1acc;border-bottom-color:#373d33}.toolbox-back a{color:#79bda7}}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+.eyebrow{margin:0 0 6px;font-size:12.5px;letter-spacing:.12em;color:var(--accent);font-weight:700}
+h1{font-family:"Noto Serif TC",serif;font-size:clamp(25px,4vw,32px);margin:0 0 8px}
+.lede{margin:0 0 24px;color:var(--ink-soft);max-width:70ch}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+.panel h2{font-family:"Noto Serif TC",serif;font-size:19px;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+.step{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-contrast);font-family:"Noto Sans TC",sans-serif;font-size:14px;font-weight:700}
+.hint{color:var(--ink-soft);font-size:14px;margin:0 0 12px}
+.small{font-size:13px}
+h3{font-size:15.5px;margin:18px 0 8px;color:var(--accent-strong)}
+.dropzone{display:flex;align-items:center;justify-content:center;gap:10px;min-height:90px;border:2px dashed var(--border-strong);border-radius:10px;background:var(--surface-2);cursor:pointer;padding:14px;text-align:center;color:var(--ink-soft)}
+.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:10px 0}
+label.inline{display:inline-flex;align-items:center;gap:6px;font-size:14px}
+select,input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px}
+input[type=number]{width:72px}
+button{font:inherit;font-size:14px;border-radius:7px;padding:7px 14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent);font-weight:700}
+button.primary:disabled,button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{padding:3px 10px;font-size:13px}
+.groups{display:grid;gap:10px}
+.grp{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+.grp-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.grp-head strong{font-size:14.5px}
+.tag{font-size:12px;color:var(--ink-faint);border:1px solid var(--border);border-radius:999px;padding:0 8px;background:var(--surface)}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:2px 14px}
+.items label{display:flex;gap:6px;align-items:flex-start;font-size:13.5px;line-height:1.5;padding:2px 0}
+.items label input{margin-top:3px}
+.items label span.stem{color:var(--ink-faint)}
+.notice{border-radius:8px;padding:9px 13px;font-size:14px;margin:10px 0}
+.notice.warn{background:var(--warn-soft);color:var(--warn)}
+.notice.bad{background:var(--danger-soft);color:var(--danger)}
+.notice.ok{background:var(--good-soft);color:var(--good)}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 4px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:150px}
+.stat b{display:block;font-size:19px;color:var(--accent-strong);font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--ink-soft)}
+.table-scroll{overflow-x:auto;margin:6px 0}
+table{border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;min-width:100%}
+th,td{padding:5px 9px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+th{background:var(--surface-2);font-weight:700;color:var(--ink-soft)}
+th.l,td.l{text-align:left;white-space:normal;min-width:120px}
+td.stemcell{color:var(--ink-soft);font-size:12.5px;max-width:340px}
+tr.kept td{background:var(--accent-soft)}
+td.dom{font-weight:700;color:var(--accent-strong);background:var(--accent-soft)}
+td.cross{font-weight:700;color:var(--warn)}
+td.neg{font-weight:700;color:var(--danger)}
+td.low{color:var(--ink-faint)}
+td.flag{color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-soft);margin:4px 0 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+svg.scree{width:100%;max-width:560px;height:auto;display:block}
+svg.scree text{font-size:11px;fill:var(--ink-soft);font-family:inherit}
+pre.prompt{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:13px;line-height:1.7;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0 0;max-height:420px;overflow:auto}
+details summary{cursor:pointer;font-size:13.5px;color:var(--ink-soft);margin-top:10px}
+ol.steps{margin:0 0 12px;padding-left:22px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.faint{color:var(--ink-faint)}
+.fa1 td.c,.fa1 th{text-align:center;vertical-align:middle;white-space:nowrap}
+.fa1 td,.fa1 th{border:1px solid var(--border-strong)}
+.fa1 td.l{white-space:normal;min-width:260px}
+.fa1 td.wrap{white-space:normal;min-width:8em;max-width:16em}
+.namepaste textarea{display:block;width:100%;box-sizing:border-box;margin:8px 0 4px;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--warn);border-radius:6px;background:var(--surface);color:var(--ink);resize:vertical}
+.namepaste textarea:focus{outline:2px solid var(--warn);outline-offset:1px}
+.savebox{margin-top:18px;padding:12px 14px;border:1px dashed var(--border-strong);border-radius:8px;background:var(--surface-2)}
+.savebox h3{margin-top:0}
+.kit-h{margin-top:22px}
+.fa-cap{margin:8px 0 4px;font-weight:700}
+.fnames{display:grid;gap:8px;margin:8px 0}
+.fname{display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:6px 12px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2)}
+.fname label{font-size:14px}
+.fname label span{display:block;font-size:12.5px;color:var(--ink-faint)}
+@media (max-width:620px){.fname{grid-template-columns:minmax(0,1fr)}}
+input[type=text]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 9px;width:100%}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:64px;resize:vertical}
+.kpick{display:flex;flex-wrap:wrap;gap:8px}
+.kpick label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
+.kpick label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);font-weight:700}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin:8px 0}
+.chart{border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface-2)}
+.chart p{margin:0 0 2px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+svg.mini{width:100%;max-width:380px;height:auto;display:block;margin:0 auto}
+svg.mini text{font-size:11px;fill:var(--ink-soft);font-family:inherit}
+td.pos{color:var(--pos)}
+td.neg{color:var(--neg)}
+td.max{font-weight:700;background:var(--accent-soft)}
+td.up{color:var(--pos);font-weight:700}
+td.down{color:var(--neg);font-weight:700}
+td.hi{font-weight:700;color:var(--accent-strong)}
+tr.total td{font-weight:700;background:var(--surface-2)}
+tr.sigrow td.l{font-weight:700}
+.testtxt{font-family:"Noto Sans TC",sans-serif;font-weight:400;font-size:13px;color:var(--ink-faint);margin-left:10px}
+.testtxt.sig{color:var(--accent-strong);font-weight:700}
+.stage{margin:34px 0 14px;padding-top:10px;border-top:2px solid var(--border);font-family:"Noto Serif TC",serif;font-size:21px;color:var(--accent-strong)}
+.stage small{display:block;font-family:"Noto Sans TC",sans-serif;font-size:13.5px;font-weight:400;color:var(--ink-soft)}
+footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
+.mv{white-space:nowrap}
+.mv button{padding:0 6px;margin-left:3px;font-size:12px}
+.fname input{max-width:420px}
+</style>
+</head>
+<body>
+<nav class="toolbox-back"><a href="../">← 回行銷研究工具箱</a></nav>
+<main>
+  <p class="eyebrow">行銷研究方法 · 統計分析</p>
+  <h1>樣本結構分析</h1>
+  <p class="lede">上傳問卷資料整理器下載的 Excel 檔，整理樣本的基本資料：資料蒐集期間、回收與有效問卷份數，以及各題的次數分配、複選題勾選率與數值題的描述統計，產生「表1　樣本結構」與撰寫樣本結構一節的 AI 報告指令。建議在複選題分析、因素分析與市場區隔分析之前先完成。所有計算都在瀏覽器中完成。</p>
+
+  <!-- 1 上傳 -->
+  <section class="panel" aria-labelledby="h1s">
+    <h2 id="h1s"><span class="step">1</span>上傳資料</h2>
+    <p class="hint">請上傳<a href="../organizer/">問卷資料整理器</a>下載的 Excel 檔。工具會讀取「欄名對照表」判斷每一欄的類型（單選題、是非題、複選題、數值），並帶入資料蒐集期間、回收份數與篩選條件；「題組」工作表的名稱也會自動帶入。也可上傳一般的 Excel 或 CSV，此時改依內容判斷類型，回收資訊需自行填寫。</p>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+      <span id="dz-label">選擇或拖曳 Excel／CSV 檔案到這裡</span>
+    </label>
+    <div id="src-sum"></div>
+  </section>
+
+  <!-- 2 資料蒐集 -->
+  <section class="panel" id="sec-collect" aria-labelledby="h2s" hidden>
+    <h2 id="h2s"><span class="step">2</span>資料蒐集方式</h2>
+    <p class="hint">回收份數、有效問卷與篩選條件已由整理器帶入；資料檔無法得知的發放方式、發放管道與抽樣方法，請依實際情形勾選。下方「樣本概況」會即時更新，並寫入報告指令。</p>
+    <div class="fnames">
+      <div class="fname"><label for="in-period">資料蒐集期間<span>例：2026/10/05 至 2026/10/19</span></label><input type="text" id="in-period" placeholder="YYYY/MM/DD 至 YYYY/MM/DD"></div>
+      <div class="fname"><label for="in-target">研究對象（選填）<span>例：曾飲用包裝綠茶的消費者</span></label><input type="text" id="in-target"></div>
+    </div>
+    <h3>發放方式</h3>
+    <div class="kpick" id="pick-mode"></div>
+    <h3>問卷連結的發放管道（可複選）</h3>
+    <p class="hint small">例如把 Google 表單連結張貼在 Facebook 社團、分享到 LINE 群組，或請親友轉傳，就勾選對應的管道；紙本問卷可勾選「課堂或校園」或在「其他」填寫發放地點。</p>
+    <div class="kpick" id="pick-chan"></div>
+    <div class="row"><label class="inline" style="flex:1;min-width:240px">其他管道 <input type="text" id="in-chan-other" placeholder="例：系學會 Instagram 限時動態、捷運站前"></label></div>
+    <h3>抽樣方法（可複選）</h3>
+    <div class="kpick" id="pick-samp"></div>
+    <h3>樣本概況</h3>
+    <div id="collect-out"></div>
+  </section>
+
+  <!-- 3 選擇變數 -->
+  <section class="panel" id="sec-vars" aria-labelledby="h3s" hidden>
+    <h2 id="h3s"><span class="step">3</span>選擇變數</h2>
+    <p class="hint">預設納入單選題、是非題與複選題；消費動機等量表題通常留給因素分析，預設不納入，需要時再勾選。開放式文字題不列入。</p>
+    <div class="groups" id="var-pick"></div>
+  </section>
+
+  <!-- 4 樣本結構表 -->
+  <section class="panel" id="sec-table" aria-labelledby="h4s" hidden>
+    <h2 id="h4s"><span class="step">4</span>表1　樣本結構</h2>
+    <p class="hint">單選題預設依次數由高到低排列，選項以數字開頭時依數字排序；「飲用頻率」這類有自然順序的題目，可用 ↑ ↓ 調整類別順序。複選題依勾選率由高到低排列，百分比以有效樣本數為分母，合計可能超過 100%。</p>
+    <div class="table-scroll" id="table-out"></div>
+    <p class="hint small" id="table-note"></p>
+    <div class="row">
+      <button type="button" class="primary" id="btn-copy-t1">複製表1（貼到 Word）</button>
+      <button type="button" id="btn-xlsx">下載 Excel</button>
+    </div>
+  </section>
+
+  <!-- 5 AI 報告指令 -->
+  <section class="panel" id="sec-prompt" aria-labelledby="h5s" hidden>
+    <h2 id="h5s"><span class="step">5</span>AI 報告指令：樣本結構</h2>
+    <p class="hint">指令已自動填入樣本概況、表1 的次數分配與描述統計。複製後貼到 AI 對話中，AI 會撰寫研究報告的「樣本結構」一節：先說明資料蒐集與回收情形，再依構面描述樣本的主要特徵。</p>
+    <div class="row">
+      <button type="button" class="primary" id="btn-copy-prompt">複製樣本結構報告指令</button>
+      <span class="hint small" id="prompt-len" style="margin:0"></span>
+    </div>
+    <details><summary>檢視指令內容</summary><pre class="prompt" id="prompt-out"></pre></details>
+  </section>
+
+  <footer>所有計算都在您的瀏覽器中完成，資料不會上傳。本工具不使用 AI 服務；報告由您把指令貼到自己的 AI 對話中產生。</footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2200); }
+function pct1(x){ return (x*100).toFixed(1)+"%"; }
+function f2(x){ return x==null||!isFinite(x)?"—":x.toFixed(2); }
+
+const MODES=["Google 表單線上問卷","SurveyCake 線上問卷","其他線上問卷平台","紙本問卷","線上與紙本問卷併行"];
+const CHANNELS=["Facebook","Instagram","LINE","Threads","Dcard","PTT","X（Twitter）","Email","課堂或校園","親友轉傳"];
+const SAMPLING=["便利抽樣","滾雪球抽樣","判斷抽樣（立意抽樣）","配額抽樣","簡單隨機抽樣"];
+
+const S={ file:"", headers:[], rows:[], meta:{}, summ:{}, groups:{}, vars:[], sel:new Set(), order:{}, mode:MODES[0], chan:new Set(), samp:new Set(["便利抽樣"]) };
+
+/* ---------- 讀檔 ---------- */
+function readFile(file){
+  const rd=new FileReader(); S.file=file.name;
+  rd.onload=()=>{
+    try{
+      const isCsv=/\.csv$/i.test(file.name);
+      const wb=isCsv?XLSX.read(rd.result,{type:"string"}):XLSX.read(new Uint8Array(rd.result),{type:"array"});
+      load(wb);
+    }catch(e){ console.error(e); toast("無法讀取這個檔案"); }
+  };
+  if (/\.csv$/i.test(file.name)) rd.readAsText(file,"utf-8"); else rd.readAsArrayBuffer(file);
+}
+function aoaOf(wb,name){ return XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:"",raw:true,blankrows:false}); }
+function load(wb){
+  const dn=wb.SheetNames.includes("資料")?"資料":wb.SheetNames[0];
+  const aoa=aoaOf(wb,dn); if (!aoa.length){ toast("資料工作表沒有內容"); return; }
+  S.headers=aoa[0].map(h=>String(h).trim()); S.rows=aoa.slice(1).filter(r=>r.some(v=>String(v).trim()!==""));
+  S.meta={}; S.summ={}; S.groups={};
+  if (wb.SheetNames.includes("欄名對照表")) parseCodebook(aoaOf(wb,"欄名對照表"));
+  if (wb.SheetNames.includes("題組")) aoaOf(wb,"題組").slice(1).forEach(r=>{ const c=String(r[0]||"").trim(), n=String(r[1]||"").trim(); if (c&&n) S.groups[c]=n; });
+  buildVars(); S.order={};
+  S.sel=new Set(S.vars.filter(v=>v.kind!=="num"&&!v.hide).map(v=>v.key));
+  $("in-period").value=S.summ["資料蒐集期間"]?String(S.summ["資料蒐集期間"][0]):"";
+  const hasCb=Object.keys(S.meta).length>0;
+  $("dz-label").textContent="已載入："+file_label();
+  $("src-sum").innerHTML='<div class="notice '+(hasCb?"ok":"warn")+'">讀取 '+S.rows.length+' 筆資料、'+S.headers.length+' 個欄位。'+(hasCb?"已讀取「欄名對照表」"+(Object.keys(S.groups).length?"與「題組」":"")+"。":"找不到「欄名對照表」，已依內容判斷欄位類型；回收份數與蒐集期間請自行確認。")+(S.summ["模擬資料筆數"]?" 此檔含模擬資料，僅供課堂練習。":"")+'</div>';
+  ["sec-collect","sec-vars","sec-table","sec-prompt"].forEach(id=>$(id).hidden=false);
+  renderPickers(); renderVarPick(); renderAll();
+}
+function file_label(){ return S.file; }
+function parseCodebook(aoa){
+  const hi=aoa.findIndex(r=>r.some(x=>String(x).trim()==="新欄名")&&r.some(x=>String(x).trim()==="類型"));
+  for (let i=0;i<(hi<0?aoa.length:hi);i++){ const k=String(aoa[i][0]||"").trim(); if (k&&k!=="資料整理摘要") S.summ[k]=aoa[i].slice(1); }
+  if (hi<0) return;
+  const h=aoa[hi].map(x=>String(x).trim()), ix=n=>h.indexOf(n);
+  const cN=ix("新欄名"), cT=ix("類型"), cNo=ix("原欄號"), cQ=ix("原題目"), cO=ix("原始選項"), cS=ix("簡稱");
+  for (let i=hi+1;i<aoa.length;i++){
+    const r=aoa[i], name=String(r[cN]||"").trim(); if (!name||name==="（已移除）") continue;
+    S.meta[name]={type:String(r[cT]||"").trim(), no:r[cNo], q:String(r[cQ]||"").trim(), opt:String(r[cO]||"").trim(), short:String(r[cS]||"").trim()};
+  }
+}
+
+/* ---------- 變數分類 ---------- */
+function numOf(v){ if (v===""||v==null) return null; const x=Number(v); return isFinite(x)?x:null; }
+function prefixOf(n){ const m=/^([A-Za-z]+)\d/.exec(n); return m?m[1]:null; }
+function buildVars(){
+  const V=[], mcMap=new Map();
+  S.headers.forEach((h,ci)=>{
+    if (!h||/^id$/i.test(h)) return;
+    const m=S.meta[h], vals=S.rows.map(r=>r[ci]), filled=vals.filter(v=>String(v).trim()!=="");
+    let type=m?m.type:null;
+    if (!type){
+      const nums=filled.map(numOf);
+      if (filled.length&&nums.every(x=>x===0||x===1)) type="0／1 欄";
+      else if (filled.length&&nums.every(x=>x!==null)) type="數值／量表";
+      else { const u=new Set(filled.map(v=>String(v).trim())); type=u.size<=15?"單選題":"文字"; }
+    }
+    const hide=h==="資料來源"||(m&&m.q==="資料來源");
+    const title=(/^[A-Za-z]+\d+$/.test(h)&&m&&m.q)?m.q:h;
+    if (type==="文字"||type==="id") return;
+    if (type==="複選題選項"||type==="0／1 欄"){
+      const key=(m&&m.q&&type==="複選題選項")?"mc:"+m.q:"mc:"+(prefixOf(h)||"__bin");
+      if (!mcMap.has(key)){ const pf=prefixOf(h); const g={key,kind:"mc",cols:[],title:String((pf&&S.groups[pf])||(m&&m.q)||(pf?"代碼 "+pf:"其他 0／1 欄")).replace(/[（(]\s*可?複選\s*[)）]/g,"").trim(),q:m?m.q:"",order:ci}; mcMap.set(key,g); V.push(g); }
+      mcMap.get(key).cols.push({ci,label:(m&&(m.short||m.opt))||optLabel(h)});
+      return;
+    }
+    if (type==="是非題") V.push({key:"yn:"+h,kind:"yn",ci,title,q:m?m.q:"",order:ci,hide});
+    else if (type==="數值／量表") V.push({key:"num:"+h,kind:"num",ci,title,q:m?m.q:"",order:ci,hide});
+    else V.push({key:"cat:"+h,kind:"cat",ci,title,q:m?m.q:"",order:ci,hide});
+  });
+  S.vars=V.sort((a,b)=>a.order-b.order);
+}
+function optLabel(n){ return String(n).replace(/^[A-Za-z]+\d*[\s_\-－—．.、:：]*/,"")||n; }
+
+/* ---------- 計算 ---------- */
+function lead(t){ const m=String(t).match(/^\s*(\d+)\s*[.．、)）]/); return m?+m[1]:null; }
+function catOrder(v,cnt){
+  const keys=[...cnt.keys()];
+  const saved=S.order[v.key];
+  if (saved){ const a=saved.filter(k=>cnt.has(k)); keys.forEach(k=>{ if (!a.includes(k)) a.push(k); }); return a; }
+  if (keys.some(k=>lead(k)!=null)) return keys.sort((x,y)=>{ const a=lead(x), b=lead(y); if (a==null&&b==null) return cnt.get(y)-cnt.get(x); if (a==null) return 1; if (b==null) return -1; return a-b; });
+  return keys.sort((x,y)=>cnt.get(y)-cnt.get(x));
+}
+function compute(v){
+  const N=S.rows.length;
+  if (v.kind==="cat"||v.kind==="yn"){
+    const cnt=new Map(); let miss=0;
+    S.rows.forEach(r=>{ let x=String(r[v.ci]).trim(); if (x===""){ miss++; return; } if (v.kind==="yn") x=x==="1"?"是":(x==="0"?"否":x); cnt.set(x,(cnt.get(x)||0)+1); });
+    const n=N-miss, keys=v.kind==="yn"&&!S.order[v.key]?["是","否"].filter(k=>cnt.has(k)).concat([...cnt.keys()].filter(k=>k!=="是"&&k!=="否")):catOrder(v,cnt);
+    return {n,miss,rows:keys.map(k=>({label:k,f:cnt.get(k),p:n?cnt.get(k)/n:0}))};
+  }
+  if (v.kind==="mc"){
+    const rows=v.cols.map(c=>{ let f=0, n=0; S.rows.forEach(r=>{ const x=numOf(r[c.ci]); if (x===null) return; n++; if (x===1) f++; }); return {label:c.label,f,p:N?f/N:0}; });
+    rows.sort((a,b)=>b.f-a.f);
+    return {n:N,rows};
+  }
+  const xs=S.rows.map(r=>numOf(r[v.ci])).filter(x=>x!==null), n=xs.length;
+  const m=n?xs.reduce((a,b)=>a+b,0)/n:null, sd=n>1?Math.sqrt(xs.reduce((a,b)=>a+(b-m)*(b-m),0)/(n-1)):null;
+  return {n,miss:N-n,m,sd,min:n?Math.min(...xs):null,max:n?Math.max(...xs):null};
+}
+
+/* ---------- 樣本概況文字 ---------- */
+function sv(k,i){ const r=S.summ[k]; return r?r[i||0]:""; }
+function fmtPeriod(t){
+  const m=/(\d{4})\D+(\d{1,2})\D+(\d{1,2})\D+?至\D*?(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(t||"");
+  if (!m) return (t||"").trim();
+  const a=[+m[1],+m[2],+m[3]], b=[+m[4],+m[5],+m[6]];
+  return a[0]+" 年 "+a[1]+" 月 "+a[2]+" 日至"+(b[0]!==a[0]?b[0]+" 年 ":"")+" "+b[1]+" 月 "+b[2]+" 日";
+}
+function joinZh(a){ return a.length<=1?(a[0]||""):a.slice(0,-1).join("、")+"與"+a[a.length-1]; }
+function screenTxt(){
+  const note=String(sv("篩選刪除筆數",1)||"").trim(); if (!note) return "";
+  return note.split("；").map(p=>{ const m=/排除(.+?)：\s*(\d+)\s*筆/.exec(p); return m?"篩選題回答"+m[1]+"者 "+m[2]+" 份":""; }).filter(Boolean).join("、");
+}
+function collectText(){
+  const nValid=S.rows.length, N0=Number(sv("原始回覆筆數"))||null, removed=Number(sv("篩選刪除筆數"))||0;
+  const sim=S.summ["模擬資料筆數"]?Number(sv("模擬資料筆數")):0, simNote=String(sv("模擬資料筆數",1)||"");
+  const real=(simNote.match(/真實資料\s*(\d+)/)||[])[1], simKeep=(simNote.match(/有效樣本中模擬資料\s*(\d+)/)||[])[1];
+  const ch=[...S.chan].concat(($("in-chan-other").value||"").trim()?[$("in-chan-other").value.trim()]:[]);
+  const paper=/紙本/.test(S.mode)&&!/併行/.test(S.mode);
+  const parts=[];
+  let s1="本研究以"+S.mode+"進行資料蒐集";
+  const tg=($("in-target").value||"").trim(); if (tg) s1="本研究以"+tg+"為研究對象，以"+S.mode+"進行資料蒐集";
+  if (ch.length) s1+=paper?"，於"+joinZh(ch)+"發放問卷":"，將問卷連結發布於"+joinZh(ch);
+  if (S.samp.size) s1+="，採"+joinZh([...S.samp])+"選取樣本";
+  parts.push(s1+"。");
+  const per=fmtPeriod($("in-period").value);
+  let s2=per?"資料蒐集期間為 "+per+"，":"";
+  if (N0){
+    s2+="共回收 "+N0+" 份問卷"+(sim&&real?"（含實際回收問卷 "+real+" 份與課堂練習用模擬資料 "+sim+" 份）":"");
+    const st=screenTxt();
+    s2+=removed?"；排除"+(st||"不符資格者 "+removed+" 份")+"後，有效問卷為 "+nValid+" 份，有效回收率為 "+pct1(nValid/N0)+"。":"，皆為有效問卷，有效回收率為 100.0%。";
+  } else s2+="有效問卷共 "+nValid+" 份。";
+  parts.push(s2);
+  if (sim&&simKeep!=null) parts.push("有效問卷中，模擬資料 "+simKeep+" 份，僅供課堂練習使用，不得作為研究結果。");
+  return parts.join("");
+}
+
+/* ---------- 畫面 ---------- */
+function pickHTML(list,isSel,name,radio){ return list.map((t,i)=>'<label><input type="'+(radio?"radio":"checkbox")+'" name="'+name+'" data-v="'+esc(t)+'"'+(isSel(t)?" checked":"")+'> '+esc(t)+'</label>').join(""); }
+function renderPickers(){
+  $("pick-mode").innerHTML=pickHTML(MODES,t=>t===S.mode,"mode",true);
+  $("pick-chan").innerHTML=pickHTML(CHANNELS,t=>S.chan.has(t),"chan");
+  $("pick-samp").innerHTML=pickHTML(SAMPLING,t=>S.samp.has(t),"samp");
+}
+function renderVarPick(){
+  const grp=[["單選題與是非題",v=>v.kind==="cat"||v.kind==="yn"],["複選題",v=>v.kind==="mc"],["數值與量表題",v=>v.kind==="num"]];
+  $("var-pick").innerHTML=grp.map(([t,f])=>{ const L=S.vars.filter(f); if (!L.length) return "";
+    return '<div class="grp"><div class="grp-head"><strong>'+t+'</strong><span class="tag">'+L.length+' 題</span><button type="button" class="ghost" data-all="'+t+'">全選</button><button type="button" class="ghost" data-none="'+t+'">全不選</button></div><div class="items">'+
+      L.map(v=>'<label><input type="checkbox" data-key="'+esc(v.key)+'"'+(S.sel.has(v.key)?" checked":"")+'><span>'+esc(v.title)+(v.kind==="mc"?'<span class="stem">（'+v.cols.length+' 個選項）</span>':"")+(v.q&&v.q!==v.title?'<br><span class="stem">'+esc(v.q)+'</span>':"")+'</span></label>').join("")+'</div></div>'; }).join("");
+  $("var-pick").querySelectorAll("[data-all],[data-none]").forEach(b=>b.addEventListener("click",()=>{ const t=b.dataset.all||b.dataset.none, f=grp.find(g=>g[0]===t)[1]; S.vars.filter(f).forEach(v=>b.dataset.all?S.sel.add(v.key):S.sel.delete(v.key)); renderVarPick(); renderAll(); }));
+}
+function selVars(){ return S.vars.filter(v=>S.sel.has(v.key)); }
+function tableModel(){
+  return selVars().map(v=>({v,r:compute(v)}));
+}
+const W_STYLE=(extra)=>"font-family:'Times New Roman','新細明體',serif;font-size:12pt;color:#000;padding:2pt 6pt;vertical-align:middle;border:1px solid #000;"+(extra||"");
+function t1HTML(word){
+  const M=tableModel();
+  const td=(t,al,extra)=>word?'<td'+(extra||"")+' style="'+W_STYLE("text-align:"+(al||"center")+";")+'">'+t+'</td>':'<td'+(extra||"")+' class="'+(al==="left"?"l":"c")+'">'+t+'</td>';
+  const th=t=>word?'<th style="'+W_STYLE("text-align:center;font-weight:normal;")+'">'+t+'</th>':'<th>'+t+'</th>';
+  let h='<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("變數")+th("類別")+th("次數")+th("百分比")+'</tr></thead><tbody>';
+  M.forEach(({v,r})=>{
+    if (v.kind==="num"){
+      h+='<tr>'+td(esc(v.title))+td("平均數（標準差）","left")+td(f2(r.m)+"（"+f2(r.sd)+"）",""," colspan=\"2\"")+'</tr>';
+      return;
+    }
+    const rows=r.rows, rs=rows.length>1?' rowspan="'+rows.length+'"':"";
+    rows.forEach((x,i)=>{
+      h+='<tr>';
+      if (i===0) h+=td(esc(v.title)+(v.kind==="mc"?"<br>（複選）":"")+(r.miss?"<br>（未作答 "+r.miss+" 人）":""),"center",rs);
+      let lab=esc(x.label);
+      if (!word&&v.kind==="cat"&&rows.length>1) lab+=' <span class="mv"><button type="button" class="ghost" data-up="'+esc(v.key)+'" data-i="'+i+'" aria-label="上移"'+(i===0?" disabled":"")+'>↑</button><button type="button" class="ghost" data-down="'+esc(v.key)+'" data-i="'+i+'" aria-label="下移"'+(i===rows.length-1?" disabled":"")+'>↓</button></span>';
+      h+=td(lab,"left")+td(String(x.f))+td(pct1(x.p))+'</tr>';
+    });
+  });
+  return h+'</tbody></table>';
+}
+function t1Note(){
+  const M=tableModel(), hasMc=M.some(x=>x.v.kind==="mc"), hasMiss=M.some(x=>x.r.miss), hasNum=M.some(x=>x.v.kind==="num");
+  let s="註：有效樣本 n = "+S.rows.length+"。";
+  if (hasMc) s+="複選題的百分比為勾選人數除以有效樣本數，合計可能超過 100%。";
+  if (hasMiss) s+="有未作答者的題目，百分比以該題作答人數為分母。";
+  if (hasNum) s+="數值題列出平均數與標準差。";
+  if (S.summ["模擬資料筆數"]) s+="本資料含課堂練習用模擬資料，不得作為研究結果。";
+  return s;
+}
+function renderAll(){
+  $("collect-out").innerHTML='<div class="notice ok">'+esc(collectText())+'</div>';
+  if (!selVars().length){ $("table-out").innerHTML='<p class="hint">請在步驟 3 至少勾選一個變數。</p>'; $("table-note").textContent=""; }
+  else { $("table-out").innerHTML=t1HTML(false); $("table-note").textContent=t1Note(); }
+  $("table-out").querySelectorAll("[data-up],[data-down]").forEach(b=>b.addEventListener("click",()=>{
+    const key=b.dataset.up||b.dataset.down, v=S.vars.find(x=>x.key===key), i=+b.dataset.i, cur=compute(v).rows.map(x=>x.label);
+    const j=b.dataset.up?i-1:i+1; if (j<0||j>=cur.length) return; [cur[i],cur[j]]=[cur[j],cur[i]]; S.order[key]=cur; renderAll();
+  }));
+  const p=promptText(); $("prompt-out").textContent=p; $("prompt-len").textContent="共 "+p.length.toLocaleString()+" 字";
+}
+
+/* ---------- AI 報告指令 ---------- */
+function promptText(){
+  const M=tableModel(), sim=!!S.summ["模擬資料筆數"];
+  const L=["請根據下方【分析結果】，撰寫正式研究報告中的「樣本結構」一節，說明資料蒐集與回收情形，並描述有效樣本的主要特徵。",""];
+  L.push("一、寫作內容（依序撰寫）");
+  L.push("1. 第一段　資料蒐集與回收：以【分析結果】的「樣本概況」為基礎改寫為正式文字，發放方式、發放管道、抽樣方法、蒐集期間、回收份數、排除份數、有效問卷份數與有效回收率須全部保留，數值不得更改。"+(sim?"資料含模擬資料，須寫明實際回收與模擬資料的份數，並說明模擬資料僅供課堂練習。":""));
+  L.push("2. 第二段起　樣本特徵：先以一句話說明有效樣本的基本資料整理如表1所示，再依構面分段描述（例如人口統計、消費行為、媒體使用與生活型態；依變數內容判斷，構面名稱自行訂定）。單選題與是非題寫出比例最高的類別及其百分比，必要時再補充次高者；有自然順序的類別（例如頻率、年齡層、所得）可合併相鄰類別概括分布，例如「每週飲用 1 次以上者合計 45.4%」。複選題寫出勾選率最高的前 3 個選項。數值題寫出平均數與標準差。");
+  L.push("3. 最後以一句話概括有效樣本的整體輪廓，例如以哪些消費者為主。");
+  L.push("");
+  L.push("二、寫作規則");
+  L.push("- 採正式學術報告文體，以繁體中文撰寫，以完整段落呈現，不使用條列；用詞一律使用「變數」，不得使用「變項」。");
+  L.push("- 百分比取小數點後一位；複選題須說明百分比以有效樣本數為分母。");
+  L.push("- 只描述樣本，不推論母體，也不評論樣本是否具有代表性。");
+  L.push("- 表1 由分析工具產生，不需輸出表格，只需在內文引用。");
+  L.push("- 不得編造【分析結果】中沒有的數值、變數或類別。");
+  L.push("");
+  L.push("三、輸出格式");
+  L.push("第一行為標題「樣本結構」，接著依序輸出各段文字。");
+  L.push("");
+  L.push("=====================");
+  L.push("【分析結果】");
+  L.push("=====================");
+  L.push("樣本概況："+collectText());
+  L.push("有效樣本數："+S.rows.length);
+  L.push("");
+  L.push("表1　樣本結構（次數，百分比）：");
+  M.forEach(({v,r})=>{
+    if (v.kind==="num"){ L.push("- "+v.title+(v.q&&v.q!==v.title?"「"+v.q+"」":"")+"（數值）：平均數 "+f2(r.m)+"，標準差 "+f2(r.sd)+"，範圍 "+r.min+"～"+r.max+"，作答 "+r.n+" 人"); return; }
+    L.push("- "+v.title+(v.q&&v.q!==v.title?"「"+v.q+"」":"")+(v.kind==="mc"?"（複選，百分比以有效樣本數為分母，依勾選率排序）":(r.miss?"（作答 "+r.n+" 人，未作答 "+r.miss+" 人）":""))+"："+r.rows.map(x=>x.label+" "+x.f+" 人（"+pct1(x.p)+"）").join("、"));
+  });
+  return L.join("\n");
+}
+
+/* ---------- 複製與下載 ---------- */
+async function copyHTML(full,name){
+  const box=document.createElement("div"); box.innerHTML=full; const text=box.innerText;
+  try{ await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([full],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]); toast("已複製"+name+"，可直接貼到 Word"); }
+  catch(e){ box.style.position="fixed"; box.style.left="-9999px"; document.body.appendChild(box); const rg=document.createRange(); rg.selectNodeContents(box); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); try{ document.execCommand("copy"); toast("已複製"+name); }catch(_){ toast("複製失敗，請手動選取"); } sel.removeAllRanges(); box.remove(); }
+}
+$("btn-copy-t1").addEventListener("click",()=>{ if (!selVars().length) return; const fs="font-family:'Times New Roman','新細明體',serif;"; copyHTML('<p style="'+fs+'font-size:12pt;">表1　樣本結構</p>'+t1HTML(true)+'<p style="'+fs+'font-size:10pt;">'+t1Note()+'</p>',"表1"); });
+$("btn-copy-prompt").addEventListener("click",async()=>{ const t=promptText(); try{ await navigator.clipboard.writeText(t); toast("已複製樣本結構報告指令"); }catch(e){ toast("複製失敗，請展開指令內容手動複製"); } });
+$("btn-xlsx").addEventListener("click",()=>{
+  const a1=[["表1　樣本結構"],["變數","類別","次數","百分比"]];
+  tableModel().forEach(({v,r})=>{
+    if (v.kind==="num"){ a1.push([v.title,"平均數",Number(f2(r.m)),""]); a1.push(["","標準差",Number(f2(r.sd)),""]); return; }
+    r.rows.forEach((x,i)=>a1.push([i===0?v.title+(v.kind==="mc"?"（複選）":""):"",x.label,x.f,Math.round(x.p*1000)/10]));
+  });
+  a1.push([]); a1.push([t1Note()]);
+  const a2=[["樣本概況"],[collectText()],[],["項目","內容"],["資料蒐集期間",$("in-period").value],["發放方式",S.mode],["發放管道",[...S.chan].concat(($("in-chan-other").value||"").trim()?[$("in-chan-other").value.trim()]:[]).join("、")],["抽樣方法",[...S.samp].join("、")],["原始回覆筆數",sv("原始回覆筆數")],["篩選刪除筆數",sv("篩選刪除筆數"),sv("篩選刪除筆數",1)],["有效樣本數",S.rows.length]];
+  if (S.summ["模擬資料筆數"]) a2.push(["模擬資料筆數",sv("模擬資料筆數"),sv("模擬資料筆數",1)]);
+  const wb=XLSX.utils.book_new();
+  const w1=XLSX.utils.aoa_to_sheet(a1); w1["!cols"]=[{wch:22},{wch:26},{wch:8},{wch:8}]; XLSX.utils.book_append_sheet(wb,w1,"表1 樣本結構");
+  const w2=XLSX.utils.aoa_to_sheet(a2); w2["!cols"]=[{wch:16},{wch:60},{wch:40}]; XLSX.utils.book_append_sheet(wb,w2,"樣本概況");
+  XLSX.writeFile(wb,"樣本結構_"+S.file.replace(/\.(xlsx|csv)$/i,"")+".xlsx");
+});
+
+/* ---------- 事件 ---------- */
+const dz=$("dropzone");
+$("file").addEventListener("change",e=>{ const f=e.target.files[0]; if (f) readFile(f); e.target.value=""; });
+dz.addEventListener("dragover",e=>{ e.preventDefault(); dz.classList.add("drag"); });
+dz.addEventListener("dragleave",()=>dz.classList.remove("drag"));
+dz.addEventListener("drop",e=>{ e.preventDefault(); dz.classList.remove("drag"); const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if (f) readFile(f); });
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if (t.name==="mode"){ S.mode=t.dataset.v; renderAll(); }
+  else if (t.name==="chan"){ t.checked?S.chan.add(t.dataset.v):S.chan.delete(t.dataset.v); renderAll(); }
+  else if (t.name==="samp"){ t.checked?S.samp.add(t.dataset.v):S.samp.delete(t.dataset.v); renderAll(); }
+  else if (t.dataset&&t.dataset.key){ t.checked?S.sel.add(t.dataset.key):S.sel.delete(t.dataset.key); renderAll(); }
+});
+["in-period","in-target","in-chan-other"].forEach(id=>$(id).addEventListener("input",renderAll));
+</script>
+</body>
+</html>
