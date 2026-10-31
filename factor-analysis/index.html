@@ -103,6 +103,7 @@ ol.steps{margin:0 0 12px;padding-left:22px;font-size:14px}
 .fa1 td.c,.fa1 th{text-align:center;vertical-align:middle;white-space:nowrap}
 .fa1 td,.fa1 th{border:1px solid var(--border-strong)}
 .fa1 td.l{white-space:normal;min-width:260px}
+.fa1 td.wrap{white-space:normal;min-width:8em;max-width:16em}
 .namepaste textarea{display:block;width:100%;box-sizing:border-box;margin:8px 0 4px;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--warn);border-radius:6px;background:var(--surface);color:var(--ink);resize:vertical}
 .namepaste textarea:focus{outline:2px solid var(--warn);outline-offset:1px}
 .savebox{margin-top:18px;padding:12px 14px;border:1px dashed var(--border-strong);border-radius:8px;background:var(--surface-2)}
@@ -1655,7 +1656,7 @@ function kitT3Rows(){
 }
 function kitT3HTML(word){
   const c=curRun();
-  const td=(t,b)=>word?'<td style="'+W_STYLE('text-align:center;'+(b?"font-weight:bold;white-space:nowrap;":""))+'">'+t+'</td>':'<td class="c"'+(b?' style="font-weight:700;white-space:nowrap"':'')+'>'+t+'</td>';
+  const td=(t,b)=>word?'<td style="'+W_STYLE('text-align:center;'+(b?"font-weight:bold;white-space:nowrap;":""))+'">'+t+'</td>':'<td class="c'+(b?'"':' wrap"')+(b?' style="font-weight:700;white-space:nowrap"':'')+'>'+t+'</td>';
   let h='<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+td("市場區隔",true)+c.N.map((_,g)=>td((g+1)+". "+esc(slabel(g)))).join("")+'</tr></thead><tbody>';
   kitT3Rows().forEach(r=>{ h+='<tr>'+td(esc(r[0]),true)+r[1].map(v=>td(esc(v))).join("")+'</tr>'; });
   return h+'</tbody></table>';
