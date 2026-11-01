@@ -148,7 +148,7 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
 <main>
   <p class="eyebrow">行銷研究方法 · 統計分析</p>
   <h1>樣本結構分析</h1>
-  <p class="lede">上傳問卷資料整理器下載的 Excel 檔，整理樣本的基本資料：資料蒐集期間、回收與有效問卷份數，以及各題的次數分配、複選題勾選率與數值題的描述統計，產生「表1　樣本結構」與撰寫樣本結構一節的 AI 報告指令。建議在複選題分析、因素分析與市場區隔分析之前先完成。所有計算都在瀏覽器中完成。</p>
+  <p class="lede">上傳問卷資料整理器下載的 Excel 檔，整理樣本的基本資料：資料蒐集期間、回收與有效問卷份數，以及人口統計變數與消費行為的次數分配，產生「表1　樣本結構」與撰寫樣本結構一節的 AI 報告指令。建議在複選題分析、因素分析與市場區隔分析之前先完成。所有計算都在瀏覽器中完成。</p>
 
   <!-- 1 上傳 -->
   <section class="panel" aria-labelledby="h1s">
@@ -184,14 +184,14 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
   <!-- 3 選擇變數 -->
   <section class="panel" id="sec-vars" aria-labelledby="h3s" hidden>
     <h2 id="h3s"><span class="step">3</span>選擇變數</h2>
-    <p class="hint">預設納入單選題、是非題與複選題；消費動機等量表題通常留給因素分析，預設不納入，需要時再勾選。開放式文字題不列入。</p>
+    <p class="hint">變數分為「人口統計變數」與「消費行為」兩組，工具依題目文字自動分組，可用「移到……」按鈕調整。預設納入單選題與是非題；消費動機等量表題通常留給因素分析，預設不納入。複選題留待「複選題組分析」，開放式文字題也不列入。</p>
     <div class="groups" id="var-pick"></div>
   </section>
 
   <!-- 4 樣本結構表 -->
   <section class="panel" id="sec-table" aria-labelledby="h4s" hidden>
     <h2 id="h4s"><span class="step">4</span>表1　樣本結構</h2>
-    <p class="hint">單選題預設依次數由高到低排列，選項以數字開頭時依數字排序；「飲用頻率」這類有自然順序的題目，可用 ↑ ↓ 調整類別順序。複選題依勾選率由高到低排列，百分比以有效樣本數為分母，合計可能超過 100%。</p>
+    <p class="hint">單選題預設依次數由高到低排列，選項以數字開頭時依數字排序；「飲用頻率」這類有自然順序的題目，可用 ↑ ↓ 調整類別順序。表格依「人口統計變數」「消費行為」分組。</p>
     <div class="table-scroll" id="table-out"></div>
     <p class="hint small" id="table-note"></p>
     <div class="row">
@@ -228,7 +228,7 @@ const MODES=["Google 表單線上問卷","SurveyCake 線上問卷","其他線上
 const CHANNELS=["Facebook","Instagram","LINE","Threads","Dcard","PTT","X（Twitter）","Email","課堂或校園","親友轉傳"];
 const SAMPLING=["便利抽樣","滾雪球抽樣","判斷抽樣（立意抽樣）","配額抽樣","簡單隨機抽樣"];
 
-const S={ file:"", headers:[], rows:[], meta:{}, summ:{}, groups:{}, vars:[], sel:new Set(), order:{}, mode:MODES[0], chan:new Set(), samp:new Set(["便利抽樣"]) };
+const S={ file:"", headers:[], rows:[], meta:{}, summ:{}, groups:{}, vars:[], sel:new Set(), order:{}, dim:{}, mode:MODES[0], chan:new Set(), samp:new Set(["便利抽樣"]) };
 
 /* ---------- 讀檔 ---------- */
 function readFile(file){
@@ -250,7 +250,7 @@ function load(wb){
   S.meta={}; S.summ={}; S.groups={};
   if (wb.SheetNames.includes("欄名對照表")) parseCodebook(aoaOf(wb,"欄名對照表"));
   if (wb.SheetNames.includes("題組")) aoaOf(wb,"題組").slice(1).forEach(r=>{ const c=String(r[0]||"").trim(), n=String(r[1]||"").trim(); if (c&&n) S.groups[c]=n; });
-  buildVars(); S.order={};
+  buildVars(); S.order={}; S.dim={};
   S.sel=new Set(S.vars.filter(v=>v.kind!=="num"&&!v.hide).map(v=>v.key));
   $("in-period").value=S.summ["資料蒐集期間"]?String(S.summ["資料蒐集期間"][0]):"";
   const hasCb=Object.keys(S.meta).length>0;
@@ -289,9 +289,10 @@ function buildVars(){
     }
     const hide=h==="資料來源"||(m&&m.q==="資料來源");
     const title=(/^[A-Za-z]+\d+$/.test(h)&&m&&m.q)?m.q:h;
-    if (type==="文字"||type==="id") return;
+    if (type==="文字"||type==="id"||hide) return;
     if (type==="複選題選項"||type==="0／1 欄"){
       const key=(m&&m.q&&type==="複選題選項")?"mc:"+m.q:"mc:"+(prefixOf(h)||"__bin");
+      return; /* 複選題留待複選題組分析，不列入樣本結構 */
       if (!mcMap.has(key)){ const pf=prefixOf(h); const g={key,kind:"mc",cols:[],title:String((pf&&S.groups[pf])||(m&&m.q)||(pf?"代碼 "+pf:"其他 0／1 欄")).replace(/[（(]\s*可?複選\s*[)）]/g,"").trim(),q:m?m.q:"",order:ci}; mcMap.set(key,g); V.push(g); }
       mcMap.get(key).cols.push({ci,label:(m&&(m.short||m.opt))||optLabel(h)});
       return;
@@ -302,6 +303,9 @@ function buildVars(){
   });
   S.vars=V.sort((a,b)=>a.order-b.order);
 }
+const DEMO_RE=/性別|年齡|年紀|年級|學院|科系|系所|職業|職務|工作|行業|所得|收入|薪資|月薪|零用錢|可支配|學歷|教育|居住|住在|地區|縣市|婚姻|家庭|子女|小孩|身分|宗教|出生/;
+function dimOf(v){ return S.dim[v.key]||(DEMO_RE.test(v.title+" "+(v.q||""))?"demo":"behav"); }
+const DIMS=[["demo","人口統計變數"],["behav","消費行為"]];
 function optLabel(n){ return String(n).replace(/^[A-Za-z]+\d*[\s_\-－—．.、:：]*/,"")||n; }
 
 /* ---------- 計算 ---------- */
@@ -376,15 +380,15 @@ function renderPickers(){
   $("pick-samp").innerHTML=pickHTML(SAMPLING,t=>S.samp.has(t),"samp");
 }
 function renderVarPick(){
-  const grp=[["單選題與是非題",v=>v.kind==="cat"||v.kind==="yn"],["複選題",v=>v.kind==="mc"],["數值與量表題",v=>v.kind==="num"]];
-  $("var-pick").innerHTML=grp.map(([t,f])=>{ const L=S.vars.filter(f); if (!L.length) return "";
-    return '<div class="grp"><div class="grp-head"><strong>'+t+'</strong><span class="tag">'+L.length+' 題</span><button type="button" class="ghost" data-all="'+t+'">全選</button><button type="button" class="ghost" data-none="'+t+'">全不選</button></div><div class="items">'+
-      L.map(v=>'<label><input type="checkbox" data-key="'+esc(v.key)+'"'+(S.sel.has(v.key)?" checked":"")+'><span>'+esc(v.title)+(v.kind==="mc"?'<span class="stem">（'+v.cols.length+' 個選項）</span>':"")+(v.q&&v.q!==v.title?'<br><span class="stem">'+esc(v.q)+'</span>':"")+'</span></label>').join("")+'</div></div>'; }).join("");
-  $("var-pick").querySelectorAll("[data-all],[data-none]").forEach(b=>b.addEventListener("click",()=>{ const t=b.dataset.all||b.dataset.none, f=grp.find(g=>g[0]===t)[1]; S.vars.filter(f).forEach(v=>b.dataset.all?S.sel.add(v.key):S.sel.delete(v.key)); renderVarPick(); renderAll(); }));
+  const item=v=>'<label><input type="checkbox" data-key="'+esc(v.key)+'"'+(S.sel.has(v.key)?" checked":"")+'><span>'+esc(v.title)+(v.kind==="num"?'<span class="stem">（數值）</span>':"")+(v.q&&v.q!==v.title?'<br><span class="stem">'+esc(v.q)+'</span>':"")+'<br><button type="button" class="ghost dimbtn" data-dim="'+esc(v.key)+'">移到「'+(dimOf(v)==="demo"?"消費行為":"人口統計變數")+'」</button></span></label>';
+  $("var-pick").innerHTML=DIMS.map(([d,t])=>{ const L=S.vars.filter(v=>dimOf(v)===d);
+    return '<div class="grp"><div class="grp-head"><strong>'+t+'</strong><span class="tag">'+L.length+' 題</span>'+(L.length?'<button type="button" class="ghost" data-all="'+d+'">全選</button><button type="button" class="ghost" data-none="'+d+'">全不選</button>':"")+'</div><div class="items">'+(L.length?L.map(item).join(""):'<span class="stem">（無）</span>')+'</div></div>'; }).join("");
+  $("var-pick").querySelectorAll("[data-all],[data-none]").forEach(b=>b.addEventListener("click",()=>{ const d=b.dataset.all||b.dataset.none; S.vars.filter(v=>dimOf(v)===d).forEach(v=>b.dataset.all?S.sel.add(v.key):S.sel.delete(v.key)); renderVarPick(); renderAll(); }));
+  $("var-pick").querySelectorAll("[data-dim]").forEach(b=>b.addEventListener("click",e=>{ e.preventDefault(); const v=S.vars.find(x=>x.key===b.dataset.dim); S.dim[v.key]=dimOf(v)==="demo"?"behav":"demo"; renderVarPick(); renderAll(); }));
 }
 function selVars(){ return S.vars.filter(v=>S.sel.has(v.key)); }
 function tableModel(){
-  return selVars().map(v=>({v,r:compute(v)}));
+  const sel=selVars(); return DIMS.flatMap(([d])=>sel.filter(v=>dimOf(v)===d)).map(v=>({v,r:compute(v),d:dimOf(v)}));
 }
 const W_STYLE=(extra)=>"font-family:'Times New Roman','新細明體',serif;font-size:12pt;color:#000;padding:2pt 6pt;vertical-align:middle;border:1px solid #000;"+(extra||"");
 function t1HTML(word){
@@ -392,7 +396,9 @@ function t1HTML(word){
   const td=(t,al,extra)=>word?'<td'+(extra||"")+' style="'+W_STYLE("text-align:"+(al||"center")+";")+'">'+t+'</td>':'<td'+(extra||"")+' class="'+(al==="left"?"l":"c")+'">'+t+'</td>';
   const th=t=>word?'<th style="'+W_STYLE("text-align:center;font-weight:normal;")+'">'+t+'</th>':'<th>'+t+'</th>';
   let h='<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("變數")+th("類別")+th("次數")+th("百分比")+'</tr></thead><tbody>';
-  M.forEach(({v,r})=>{
+  let curD=null;
+  M.forEach(({v,r,d})=>{
+    if (d!==curD){ curD=d; h+='<tr>'+td("<b>"+DIMS.find(x=>x[0]===d)[1]+"</b>","left",' colspan="4"')+'</tr>'; }
     if (v.kind==="num"){
       h+='<tr>'+td(esc(v.title))+td("平均數（標準差）","left")+td(f2(r.m)+"（"+f2(r.sd)+"）",""," colspan=\"2\"")+'</tr>';
       return;
@@ -434,18 +440,20 @@ function promptText(){
   const L=["請根據下方【分析結果】，撰寫正式研究報告中的「樣本結構」一節，說明資料蒐集與回收情形，並描述有效樣本的主要特徵。",""];
   L.push("一、寫作內容（依序撰寫）");
   L.push("1. 第一段　資料蒐集與回收：以【分析結果】的「樣本概況」為基礎改寫為正式文字，發放方式、發放管道、抽樣方法、蒐集期間、回收份數、排除份數、有效問卷份數與有效回收率須全部保留，數值不得更改。"+(sim?"資料含模擬資料，須寫明實際回收與模擬資料的份數，並說明模擬資料僅供課堂練習。":""));
-  L.push("2. 第二段起　樣本特徵：先以一句話說明有效樣本的基本資料整理如表1所示，再依構面分段描述（例如人口統計、消費行為、媒體使用與生活型態；依變數內容判斷，構面名稱自行訂定）。單選題與是非題寫出比例最高的類別及其百分比，必要時再補充次高者；有自然順序的類別（例如頻率、年齡層、所得）可合併相鄰類別概括分布，例如「每週飲用 1 次以上者合計 45.4%」。複選題寫出勾選率最高的前 3 個選項。數值題寫出平均數與標準差。");
-  L.push("3. 最後以一句話概括有效樣本的整體輪廓，例如以哪些消費者為主。");
+  const hasD=M.some(x=>x.d==="demo"), hasB=M.some(x=>x.d==="behav");
+  const secs=[]; if (hasD) secs.push("人口統計變數"); if (hasB) secs.push("消費行為");
+  L.push("2. 接著依【分析結果】表1 的分組，分節描述樣本特徵，節標題依序為"+secs.map((t,i)=>"「（"+"一二"[i]+"）"+t+"」").join("、")+"，各自獨立成一行；第一節開頭以一句話說明有效樣本的基本資料整理如表1所示。每節一段：單選題與是非題寫出比例最高的類別及其百分比，必要時再補充次高者；有自然順序的類別（例如頻率、年齡層、所得）可合併相鄰類別概括分布，例如「每週飲用 1 次以上者合計 45.4%」。數值題寫出平均數與標準差。只能描述各節所列的變數，不得把變數移到另一節。");
+  L.push("3. 最後一節的段落結尾，以一句話概括有效樣本的整體輪廓，例如以哪些消費者為主。");
   L.push("");
   L.push("二、寫作規則");
   L.push("- 採正式學術報告文體，以繁體中文撰寫，以完整段落呈現，不使用條列；用詞一律使用「變數」，不得使用「變項」。");
-  L.push("- 百分比取小數點後一位；複選題須說明百分比以有效樣本數為分母。");
+  L.push("- 百分比取小數點後一位。複選題留待後續的複選題組分析，本節不描述。");
   L.push("- 只描述樣本，不推論母體，也不評論樣本是否具有代表性。");
-  L.push("- 表1 由分析工具產生，不需輸出表格，只需在內文引用；在第一次以「如表1所示」引用表1的段落之後，另起一行單獨輸出「〔插入表1〕」，供研究者貼上表格。");
+  L.push("- 表1 由分析工具產生，不需輸出表格，只需在內文引用；在最後一節的段落之後，另起一行單獨輸出「〔插入表1〕」，供研究者貼上表格。");
   L.push("- 不得編造【分析結果】中沒有的數值、變數或類別。");
   L.push("");
   L.push("三、輸出格式");
-  L.push("第一行為標題「樣本結構」，接著依序輸出各段文字；以「如表1所示」引用表1的段落之後，單獨一行輸出「〔插入表1〕」。表格位置標記「〔插入表N〕」必須單獨成一行輸出，不可省略、不可改寫，也不可併入段落文字。");
+  L.push("第一行為標題「樣本結構」，接著依序輸出：資料蒐集與回收段落／"+secs.map((t,i)=>"（"+"一二"[i]+"）"+t+"／（段落）").join("／")+"／〔插入表1〕（「／」代表換行）。表格位置標記「〔插入表N〕」必須單獨成一行輸出，不可省略、不可改寫，也不可併入段落文字。");
   L.push("");
   L.push("=====================");
   L.push("【分析結果】");
@@ -453,8 +461,10 @@ function promptText(){
   L.push("樣本概況："+collectText());
   L.push("有效樣本數："+S.rows.length);
   L.push("");
-  L.push("表1　樣本結構（次數，百分比）：");
-  M.forEach(({v,r})=>{
+  L.push("表1　樣本結構（次數，百分比；依分組列出）：");
+  let curP=null;
+  M.forEach(({v,r,d})=>{
+    if (d!==curP){ curP=d; L.push("【"+DIMS.find(x=>x[0]===d)[1]+"】"); }
     if (v.kind==="num"){ L.push("- "+v.title+(v.q&&v.q!==v.title?"「"+v.q+"」":"")+"（數值）：平均數 "+f2(r.m)+"，標準差 "+f2(r.sd)+"，範圍 "+r.min+"～"+r.max+"，作答 "+r.n+" 人"); return; }
     L.push("- "+v.title+(v.q&&v.q!==v.title?"「"+v.q+"」":"")+(v.kind==="mc"?"（複選，百分比以有效樣本數為分母，依勾選率排序）":(r.miss?"（作答 "+r.n+" 人，未作答 "+r.miss+" 人）":""))+"："+r.rows.map(x=>x.label+" "+x.f+" 人（"+pct1(x.p)+"）").join("、"));
   });
@@ -471,7 +481,9 @@ $("btn-copy-t1").addEventListener("click",()=>{ if (!selVars().length) return; c
 $("btn-copy-prompt").addEventListener("click",async()=>{ const t=promptText(); try{ await navigator.clipboard.writeText(t); toast("已複製樣本結構報告指令"); }catch(e){ toast("複製失敗，請展開指令內容手動複製"); } });
 $("btn-xlsx").addEventListener("click",()=>{
   const a1=[["表1　樣本結構"],["變數","類別","次數","百分比"]];
-  tableModel().forEach(({v,r})=>{
+  let curX=null;
+  tableModel().forEach(({v,r,d})=>{
+    if (d!==curX){ curX=d; a1.push([DIMS.find(x=>x[0]===d)[1]]); }
     if (v.kind==="num"){ a1.push([v.title,"平均數",Number(f2(r.m)),""]); a1.push(["","標準差",Number(f2(r.sd)),""]); return; }
     r.rows.forEach((x,i)=>a1.push([i===0?v.title+(v.kind==="mc"?"（複選）":""):"",x.label,x.f,Math.round(x.p*1000)/10]));
   });
