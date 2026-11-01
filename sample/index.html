@@ -305,9 +305,11 @@ function buildVars(){
     else V.push({key:"cat:"+h,kind:"cat",ci,title,q:m?m.q:"",order:ci,hide});
   });
   /* 同一代碼的多個是非題（例如 B1原萃、B2純喫茶：曾喝過的品牌）視為一個題組，比照複選題製表 */
-  const byPf=new Map(); V.filter(v=>v.kind==="yn").forEach(v=>{ const pf=prefixOf(S.headers[v.ci]); if (pf){ if (!byPf.has(pf)) byPf.set(pf,[]); byPf.get(pf).push(v); } });
+  const YES=/^(是|有|yes|y|1)$/i, YN=/^(是|否|有|沒有|無|yes|no|y|n|0|1)$/i;
+  const isYN=v=>v.kind==="yn"||(v.kind==="cat"&&(()=>{ const vals=new Set(S.rows.map(r=>String(r[v.ci]==null?"":r[v.ci]).trim()).filter(x=>x!=="")); return vals.size>0&&vals.size<=2&&[...vals].every(x=>YN.test(x)); })());
+  const byPf=new Map(); V.filter(isYN).forEach(v=>{ const pf=prefixOf(S.headers[v.ci]); if (pf){ if (!byPf.has(pf)) byPf.set(pf,[]); byPf.get(pf).push(v); } });
   byPf.forEach((L,pf)=>{ if (L.length<2) return;
-    const g={key:"mc:yn:"+pf,kind:"mc",cols:L.map(v=>({ci:v.ci,label:(S.meta[S.headers[v.ci]]&&(S.meta[S.headers[v.ci]].short||S.meta[S.headers[v.ci]].opt))||optLabel(S.headers[v.ci])})),title:S.groups[pf]||("代碼 "+pf),q:"",order:L[0].order,yn:true};
+    const g={key:"mc:yn:"+pf,kind:"mc",cols:L.map(v=>({ci:v.ci,label:(S.meta[S.headers[v.ci]]&&(S.meta[S.headers[v.ci]].short||S.meta[S.headers[v.ci]].opt))||optLabel(S.headers[v.ci])})),title:S.groups[pf]||ynTitle(L)||("代碼 "+pf),q:"",order:L[0].order,yn:true};
     L.forEach(v=>V.splice(V.indexOf(v),1)); V.push(g); lastOther=Math.max(lastOther,...L.map(v=>v.ci)); });
   /* 正式問卷的最後一部分為人口統計變數：位於最後一個量表題或複選題之後的單選題、是非題歸入人口統計變數；其餘歸入消費行為 */
   V.forEach(v=>{ if (v.kind==="cat"||v.kind==="yn") v.auto=v.ci>lastOther?"demo":"behav"; });
@@ -317,6 +319,8 @@ function buildVars(){
 const DEMO_RE=/性別|年齡|年紀|年級|學院|科系|系所|職業|職務|工作|行業|所得|收入|薪資|月薪|零用錢|可支配|學歷|教育|居住|住在|地區|縣市|婚姻|家庭|子女|小孩|身分|宗教|出生/;
 function dimOf(v){ if (v.kind==="mc") return "mc"; return S.dim[v.key]||v.auto||"behav"; }
 const DIMS=[["demo","人口統計變數"],["behav","消費行為"]];
+/* 同代碼是非題的題組名稱：取各題題目的共同部分，例如「您曾經喝過「原萃」包裝綠茶嗎？」→「曾經喝過的包裝綠茶」 */
+function ynTitle(L){ const q=L.map(v=>String(v.q||"").replace(/^\s*\d+\s*[.．、]\s*/,"")); if (!q[0]) return ""; const m=/^(?:您|你)?(.*?)[「『].*?[」』](.*?)[嗎？?]*$/.exec(q[0]); return m?(m[1]+"的"+m[2]).replace(/^的|的$/g,""):""; }
 function optLabel(n){ return String(n).replace(/^[A-Za-z]+\d*[\s_\-－—．.、:：]*/,"")||n; }
 
 /* ---------- 計算 ---------- */
@@ -337,7 +341,7 @@ function compute(v){
     return {n,miss,rows:keys.map(k=>({label:k,f:cnt.get(k),p:n?cnt.get(k)/n:0}))};
   }
   if (v.kind==="mc"){
-    const rows=v.cols.map(c=>{ let f=0, n=0; S.rows.forEach(r=>{ const x=numOf(r[c.ci]); if (x===null) return; n++; if (x===1) f++; }); return {label:c.label,f,p:N?f/N:0}; });
+    const rows=v.cols.map(c=>{ let f=0; S.rows.forEach(r=>{ const t=String(r[c.ci]==null?"":r[c.ci]).trim(); if (t==="1"||/^(是|有|yes|y)$/i.test(t)) f++; }); return {label:c.label,f,p:N?f/N:0}; });
     rows.sort((a,b)=>b.f-a.f);
     return {n:N,rows};
   }
