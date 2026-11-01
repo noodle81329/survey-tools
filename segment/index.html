@@ -716,7 +716,7 @@ function loadSheet(name){
   S.userCut=false;
   const fa=readSheetCfg(S.wb,"因素分析設定"), sg=readSheetCfg(S.wb,"分析設定");
   if (!fa||!fa.efa||!fa.items){ const isRaw=S.headers.some(h=>/^(時間戳記|timestamp)$/i.test(h))&&!S.wb.Sheets["欄名對照表"]; $("src-sum").innerHTML=isRaw?'<div class="notice bad"><b>這是 Google 表單的原始回覆。</b>複選題尚未拆成 0／1 欄，題項也尚未依量表分組。請先以<a href="../organizer/">問卷資料整理器</a>整理，再到<a href="../factor-analysis/">因素分析工具</a>完成探索性因素分析（EFA），下載「因素分析資料檔」後上傳到這裡。</div>':'<div class="notice bad">這個檔案沒有 EFA 結果。請先到<a href="../factor-analysis/">因素分析工具</a>完成探索性因素分析（EFA），下載「因素分析資料檔」後再上傳；若要使用含因素分析步驟的一頁式流程，請改用<a href="../segmentation/">舊版市場區隔分析</a>。</div>'; $("dz-label").textContent="已上傳："+S.fileName; hideFrom("sec-adequacy"); ["sec-k","sec-seg","sec-prof","sec-anova","sec-dl","sec-seg-prompt"].forEach(x=>$(x).hidden=true); return; }
-  const cfg=Object.assign({},fa,sg?{K:sg.K,segNames:sg.segNames,prof:sg.prof,alpha:sg.alpha,topic:sg.topic}:{});
+  const cfg=Object.assign({},fa,sg?{K:sg.K,segNames:sg.segNames,prof:sg.prof,alpha:sg.alpha,onlySig:sg.onlySig,topic:sg.topic,focalBrand:sg.focalBrand}:{});
   cfg.added=[...new Set([].concat(fa.added||[],sg&&sg.added||[]).filter(h=>!(fa.cfa&&fa.cfa.cons||[]).some(c=>c.col===h)))];
   S.fa=fa;
   if (cfg&&cfg.K&&!(cfg.segNames&&cfg.segNames[cfg.K]&&cfg.segNames[cfg.K].some(x=>(x||"").trim()))){
@@ -772,7 +772,7 @@ function applyCfg(cfg){
   if ([...$("cut").options].some(o=>+o.value===+cfg.cut)){ $("cut").value=String(+cfg.cut); S.userCut=true; }
   S.fnames=(cfg.fnames||[]).slice();
   if (cfg.K){ S.K=cfg.K; S.userK=true; }
-  if (cfg.alpha) $("alpha").value=cfg.alpha;
+  if (cfg.alpha) $("alpha").value=cfg.alpha; if (typeof cfg.onlySig==="boolean") $("only-sig").checked=cfg.onlySig;
   return true;
 }
 function num(v){ if (v===""||v===null||v===undefined) return null; const x=typeof v==="number"?v:Number(String(v).trim()); return Number.isFinite(x)?x:null; }
@@ -2002,7 +2002,7 @@ function dlData(suffix){
   ["欄名對照表","題組","因素分析設定"].forEach(n=>{ if (S.wb.Sheets[n]) XLSX.utils.book_append_sheet(wb,S.wb.Sheets[n],n); });
   const cfg={v:1, items:r.cols.map(c=>c.name), exHist:S.exHist.map(x=>({name:x.name,stem:x.stem,reason:x.reason,loadTxt:x.loadTxt,nf:x.nf,mean:x.mean})),
     nf:k, userNf:S.userNf, cut:r.cut.v, fnames:Array.from({length:k},(_,j)=>(S.fnames[j]||"").trim()), K:c?c.k:null,
-    topic:$("topic").value, focalBrand:$("focal-brand").value, alpha:$("alpha").value, segNames:S.segNames||{}, kept:S.numCols.filter(c=>S.kept.has(c.ci)).map(c=>c.name), prof:S.profCols.filter(pc=>S.profSel.has(pc.ci)).map(pc=>pc.name), added:fh.concat(c&&ki<0?["集群"]:[]).concat(hasNm&&ni<0?["區隔名稱"]:[])};
+    topic:$("topic").value, focalBrand:$("focal-brand").value, alpha:$("alpha").value, onlySig:$("only-sig").checked, segNames:S.segNames||{}, kept:S.numCols.filter(c=>S.kept.has(c.ci)).map(c=>c.name), prof:S.profCols.filter(pc=>S.profSel.has(pc.ci)).map(pc=>pc.name), added:fh.concat(c&&ki<0?["集群"]:[]).concat(hasNm&&ni<0?["區隔名稱"]:[])};
   const st=[["項目","內容"],
     ["說明","重新上傳此檔案時，市場區隔分析工具會依本工作表自動還原上次的分析；請勿修改本工作表。"],
     ["分析題項",cfg.items.join("、")],
@@ -2010,7 +2010,7 @@ function dlData(suffix){
     ["因素個數",k],["門檻值",fcut(r.cut.v)],
     ["因素名稱",cfg.fnames.map((n,j)=>"因素"+(j+1)+"＝"+(n||"（未命名）")).join("；")],
     ["集群數",cfg.K||"尚未分群"],
-    ["區隔名稱",c?Array.from({length:c.k},(_,g)=>"集群"+(g+1)+"＝"+((nm[g]||"").trim()||"（未命名）")).join("；"):"尚未分群"],["研究主題",cfg.topic||"（未填寫）"],
+    ["區隔名稱",c?Array.from({length:c.k},(_,g)=>"集群"+(g+1)+"＝"+((nm[g]||"").trim()||"（未命名）")).join("；"):"尚未分群"],["研究主題",cfg.topic||"（未填寫）"],["本研究品牌",cfg.focalBrand||"（未填寫）"],["顯著水準 α",cfg.alpha||"（未設定）"],["只顯示達顯著的變數",cfg.onlySig?"是":"否"],
     ["附加欄位",cfg.added.join("、")],
     ["設定代碼",JSON.stringify(cfg)]];
   const sw=XLSX.utils.aoa_to_sheet(st); sw["!cols"]=[{wch:26},{wch:80}];
