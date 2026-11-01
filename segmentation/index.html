@@ -1777,7 +1777,7 @@ function renderSegPrompt(){
   if (!S.seg||!curRun()) return;
   const G=S.seg, c=curRun(), K=c.k, k=S.nf, r=S.res, fl=Array.from({length:k},(_,j)=>flabel(j));
   const P=S.prof&&S.prof.K===K?S.prof:null, FI=faInfo(), mk=namingCells(c.C);
-  const AL=P?P.a:.05, AT=P?fp(P.a):".05", loose=AL>.05+1e-9, weak=AL>.10+1e-9; /* 輪廓分析放寬顯著水準時的寫作要求 */
+  const AL=P?P.a:.05, AT=P?fp(P.a):".05", loose=AL>.05+1e-9, weak=false; /* 輪廓分析放寬顯著水準時的寫作要求；不區分證據強弱，以 α 判定有無 */
   const named=Array.from({length:K},(_,g)=>(segNames()[g]||"").trim()), allNamed=named.every(Boolean);
   const topic=$("topic").value.trim(), scr=readScreen(S.wb);
   const stemOf=it=>String(it.c.stem||"").replace(/^\s*\d+\s*[.．、]\s*/,"");
