@@ -1698,6 +1698,7 @@ function kitT2HTML(word){
   const td=(t,al,extra)=>word?'<td'+(extra||"")+' style="'+W_STYLE('text-align:'+(al||"center")+';')+'">'+t+'</td>':'<td'+(extra||"")+' class="'+(al==="left"?"l":"c")+'">'+t+'</td>';
   const th=t=>word?'<th style="'+W_STYLE('text-align:center;font-weight:normal;')+'">'+t+'</th>':'<th>'+t+'</th>';
   let h='<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("輪廓變數")+th("類別")+c.N.map((_,g)=>th((g+1)+". "+esc(slabel(g)))).join("")+th(NL.length?"χ²／<i>F</i>":"χ²")+th("<i>p</i>")+'</tr></thead><tbody>';
+  h+='<tr>'+td("全體（各區隔比例）","center",' colspan="2"')+kitShare().map(v=>td(Math.round(v*100)+"%")).join("")+td("")+td("")+'</tr>';
   const groups=[]; L.forEach(x=>{ if (x.type==="bin"){ const key="bin:"+(x.pc.prefix||"__"); let gp=groups.find(z=>z.key===key); if (!gp){ gp={key,title:x.pc.prefix&&S.groupNames[x.pc.prefix]?S.groupNames[x.pc.prefix]:(x.pc.prefix?"代碼 "+x.pc.prefix:"複選題"),rows:[],bin:true}; groups.push(gp); } gp.rows.push({label:optLabel(x.pc),row:x.rows[0],t:x.test}); }
     else groups.push({key:"cat:"+x.pc.ci,title:profLabel(x.pc),rows:x.rows.map(r=>({label:catLabel(r.level),row:r})),t:x.test}); });
   groups.forEach(gp=>{
@@ -1713,7 +1714,6 @@ function kitT2HTML(word){
       h+='</tr>';
     });
   });
-  h+='<tr>'+td("全體（各區隔比例）","center",' colspan="2"')+kitShare().map(v=>td(Math.round(v*100)+"%")).join("")+td("")+td("")+'</tr>';
   /* 變異數分析達顯著的量化輪廓變數：各區隔原始平均數，平均數最高（標準化平均數 > 0）者以粗體底線標示 */
   NL.forEach((x,i)=>{
     const t=x.test, top=typeof topG==="function"?topG(x):-1;
