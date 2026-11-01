@@ -196,7 +196,7 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
   <!-- 4 樣本結構表 -->
   <section class="panel" id="sec-table" aria-labelledby="h4s" hidden>
     <h2 id="h4s"><span class="step">4</span>樣本結構表與整體市場消費輪廓圖</h2>
-    <p class="hint">表1 列出單選題與是非題，依「人口統計變數」「消費行為」分組；類別預設依次數由高到低排列，選項以數字開頭時依數字排序，「飲用頻率」這類有自然順序的題目可用 ↑ ↓ 調整。每個複選題組各畫一張直條圖（圖1 起），依比例由高到低排列，比例以有效樣本數為分母；圖片不含圖稱，圖稱由報告寫在插入位置下方。</p>
+    <p class="hint">表1 列出單選題與是非題，依「人口統計變數」「消費行為」分組；類別預設依次數由高到低排列，選項以數字開頭時依數字排序，「飲用頻率」這類有自然順序的題目可用 ↑ ↓ 調整。每個複選題組各畫一張直條圖（圖1 起），依比例由高到低排列，比例以有效樣本數為分母；選項少時選項文字橫寫，選項多時斜寫；圖片不含圖稱，圖稱由報告寫在插入位置下方。</p>
     <div id="tables-out"></div>
     <div class="row">
       <button type="button" id="btn-xlsx">下載 Excel（全部表格）</button>
@@ -415,12 +415,13 @@ function t1Cap(){ return "表1　"+pre()+"樣本結構"; }
 function mcCap(x){ return "圖"+x.no+"　"+x.v.title+"之勾選比例"; }
 /* 複選題組直條圖：依比例由高到低，選項直書，長條上方標示百分比數值；不含圖稱（圖稱由報告寫在插入位置下方） */
 function mcSVG(x){
-  /* 選項少時選項文字橫寫、柱子加寬，版面較寬矮；選項多、橫寫放不下時改為直書 */
-  const rows=x.r.rows, fs=14, left=40, top=22, MAXW=640;
+  /* 選項少、橫寫放得下時：選項橫寫、柱子加寬，版面寬矮；選項多時：選項斜寫 40 度 */
+  const rows=x.r.rows, fs=14, top=22, MAXW=640, ang=40, rad=ang*Math.PI/180;
   const tw=t=>[...String(t)].reduce((a,c)=>a+(/[\x00-\xff]/.test(c)?0.6:1),0)*fs;
-  const maxTw=Math.max(fs,...rows.map(o=>tw(o.label))), horiz=left+rows.length*Math.max(56,maxTw+14)+10<=MAXW;
+  const maxTw=Math.max(fs,...rows.map(o=>tw(o.label))), horiz=40+rows.length*Math.max(56,maxTw+14)+10<=MAXW;
   const cw=horiz?Math.max(56,maxTw+14):42, bw=Math.min(horiz?44:26,cw*0.62), ph=horiz?160:200;
-  const maxLen=Math.max(1,...rows.map(o=>[...String(o.label)].length)), labH=horiz?fs+12:maxLen*(fs+2)+8;
+  const left=horiz?40:Math.max(40,Math.ceil(maxTw*Math.cos(rad))-cw/2+10);
+  const labH=horiz?fs+12:Math.ceil(maxTw*Math.sin(rad))+fs+6;
   const W=left+rows.length*cw+10, H=top+ph+labH+8, y=p=>top+ph-p*ph;
   let g="";
   [0,.25,.5,.75,1].forEach(t=>{ g+='<line x1="'+left+'" y1="'+y(t)+'" x2="'+(W-6)+'" y2="'+y(t)+'" stroke="#e3ded2"/><text x="'+(left-6)+'" y="'+(y(t)+4)+'" font-size="11" fill="#655e4d" text-anchor="end">'+Math.round(t*100)+'%</text>'; });
@@ -428,7 +429,7 @@ function mcSVG(x){
     g+='<rect x="'+(cx-bw/2)+'" y="'+y(o.p)+'" width="'+bw+'" height="'+(y(0)-y(o.p))+'" fill="#28594f" rx="2"/>';
     g+='<text x="'+cx+'" y="'+(y(o.p)-5)+'" font-size="11" fill="#232019" text-anchor="middle">'+(o.p*100).toFixed(1)+'</text>';
     if (horiz) g+='<text x="'+cx+'" y="'+(y(0)+fs+6)+'" font-size="'+fs+'" fill="#232019" text-anchor="middle">'+esc(o.label)+'</text>';
-    else [...String(o.label)].forEach((c,k)=>{ g+='<text x="'+cx+'" y="'+(y(0)+8+(k+1)*(fs+2)-3)+'" font-size="'+fs+'" fill="#232019" text-anchor="middle">'+esc(c)+'</text>'; }); });
+    else g+='<text transform="translate('+(cx+4)+','+(y(0)+12)+') rotate(-'+ang+')" font-size="'+fs+'" fill="#232019" text-anchor="end">'+esc(o.label)+'</text>'; });
   g+='<line x1="'+left+'" y1="'+y(0)+'" x2="'+(W-6)+'" y2="'+y(0)+'" stroke="#655e4d"/>';
   return '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" font-family="\'Noto Sans TC\',\'PingFang TC\',\'Microsoft JhengHei\',sans-serif"><rect width="100%" height="100%" fill="#fff"/>'+g+'</svg>';
 }
