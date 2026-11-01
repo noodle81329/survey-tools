@@ -256,6 +256,7 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
     <div id="fa-msg"></div>
     <div class="table-scroll" id="fa-table"></div>
     <button type="button" id="btn-copy-fa">複製表1</button>
+    <div class="notice ok" style="margin-top:14px"><b>下一步：</b>若量表中有要建立指標的構念（例如獨立我、相依我），請<a href="#" data-goto="cfa">繼續進行驗證性因素分析（CFA）</a>；若不進行 CFA，請直接<a href="#" data-goto="dl">前往下載結果</a>，下載因素分析資料檔，再上傳至市場區隔分析。</div>
 
   </section>
 
@@ -2233,6 +2234,7 @@ $("btn-copy-cfa-table").addEventListener("click",()=>{ if (S.cfa&&S.cfa.res) cop
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{ const t=b.dataset.tab;
   document.querySelectorAll(".tab").forEach(x=>{ x.classList.toggle("on",x===b); x.setAttribute("aria-selected",x===b?"true":"false"); });
   $("tab-efa").hidden=t!=="efa"; $("tab-cfa").hidden=t!=="cfa"; $("tab-dl").hidden=t!=="dl"; if (t==="cfa") renderCfaSetup(); if (t==="dl") updSave(); }));
+document.querySelectorAll("[data-goto]").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); const t=document.querySelector('.tab[data-tab="'+a.dataset.goto+'"]'); if (t){ t.click(); t.scrollIntoView({behavior:"smooth",block:"start"}); } }));
 updSave();
 $("btn-copy-ca")&&$("btn-copy-ca").addEventListener("click",()=>copyText($("ca-prompt").textContent,"已複製集群分析報告指令"));
 $("btn-copy-ca-table")&&$("btn-copy-ca-table").addEventListener("click",copyCaTable);
