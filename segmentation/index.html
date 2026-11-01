@@ -296,7 +296,7 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
     <div class="savebox">
       <h3>暫存集群分析結果</h3>
       <p class="hint">若要下次上課再繼續，請先下載資料檔並保存。資料檔含各因素分數與集群欄，並記錄因素分析的設定、因素名稱、採用的群數、區隔名稱與步驟 9 的輪廓變數勾選；下次在步驟 1 上傳這個檔案，就會還原到目前的進度，直接接續輪廓分析。</p>
-      <button type="button" id="dl-data-ca">下載資料檔（下次上課接續用）</button>
+      <button type="button" id="dl-data-ca">下載集群分析資料檔（接續輪廓分析用）</button>
     </div>
   </section>
 
@@ -320,7 +320,7 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
   <section class="panel" id="sec-dl" aria-labelledby="h10s" hidden>
     <h2 id="h10s"><span class="step">10</span>下載結果</h2>
     <div class="row">
-      <button type="button" id="dl-data">下載資料 Excel（含因素分數與集群）</button>
+      <button type="button" id="dl-data">下載市場區隔資料檔（含輪廓分析設定）</button>
       <button type="button" id="dl-result">下載分析結果 Excel</button>
     </div>
     <p class="hint small">資料檔在原始資料後方加上各因素分數（迴歸法，平均數 0、標準差 1；已命名者以因素名稱為欄名）與「集群」欄，並保留「欄名對照表」與「題組」工作表，另存「分析設定」工作表；下次上傳這個資料檔，會自動還原題項、被剔除的題項、因素個數、門檻值、因素名稱與集群數，可直接接續集群分析。因缺漏而排除的受訪者，這些欄位為空白。分析結果檔包含負荷量、特徵值、適切性檢定、群中心值、群數比較與輪廓分析。</p>
@@ -345,11 +345,6 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
     <h3 class="kit-h">報告用圖表</h3>
     <p class="hint">以下圖表由本工具依分析結果產生，格式與數值不經 AI；欄名採用步驟 8 的區隔名稱，表2、表3 依步驟 9 的輪廓分析結果與顯著水準即時更新。表格按「複製」後可直接貼到 Word；若需要圖形，可使用最下方的 AI 繪圖指令。</p>
     <div id="kit"></div>
-    <div class="savebox">
-      <h3>暫存完整分析結果</h3>
-      <p class="hint">步驟 3 之後修改的設定（顯著水準 α、只顯示達顯著的變數、輪廓變數勾選、研究主題與本研究品牌）要在這裡重新下載才會保存；下次在步驟 1 上傳這個檔案，即可還原到目前的分析狀態。</p>
-      <button type="button" id="dl-data-seg">下載資料檔（含輪廓分析設定）</button>
-    </div>
   </section>
 
   <!-- 截圖版 -->
@@ -1876,7 +1871,7 @@ function renderSegPrompt(){
 
 /* ---------- 下載 ---------- */
 function round(x,d){ const m=Math.pow(10,d); return Math.round(x*m)/m; }
-function stamp(){ return S.fileName.replace(/\.(xlsx|csv|omv)$/i,"").replace(/_(因素分析資料|因素分數資料|集群資料|市場區隔資料|市場區隔分析結果|EFA分析結果|CFA分析結果)$/,"").replace(/^(?:(?:fa|seg|efa-result|cfa-result|seg-result)_)+/,""); }
+function stamp(){ return S.fileName.replace(/\.(xlsx|csv|omv)$/i,"").replace(/_(因素分析資料|因素分數資料|集群資料|市場區隔資料|市場區隔分析結果|EFA分析結果|CFA分析結果)$/,"").replace(/^(?:(?:fa|seg|efa-result|cfa-result|seg-result|seg-cluster)_)+/,""); }
 function outName(prefix){ return prefix+"_"+stamp()+".xlsx"; }
 function loadingSheets(wb){
   const r=S.res, k=S.nf, p=r.cols.length, sol=r.sol;
@@ -1969,7 +1964,7 @@ function dlData(suffix){
     ["設定代碼",JSON.stringify(cfg)]];
   const sw=XLSX.utils.aoa_to_sheet(st); sw["!cols"]=[{wch:26},{wch:80}];
   XLSX.utils.book_append_sheet(wb,sw,"分析設定");
-  XLSX.writeFile(wb,outName(suffix==="因素分數資料"?"fa":"seg"));
+  XLSX.writeFile(wb,outName(suffix==="因素分數資料"?"fa":(suffix==="市場區隔資料"?"seg":"seg-cluster")));
 }
 
 /* ---------- 複製 ---------- */
@@ -2005,10 +2000,9 @@ $("nf").addEventListener("input",()=>{
 $("btn-kaiser").addEventListener("click",()=>{ if (!S.res) return; S.nf=S.res.kaiser; S.userNf=false; renderEigen(); compute(); });
 $("cut").addEventListener("change",()=>{ S.userCut=true; compute(); });
 $("hide-low").addEventListener("change",()=>{ if (S.res) renderLoadings(); });
-$("dl-data").addEventListener("click",dlData);
+$("dl-data").addEventListener("click",()=>dlData("市場區隔資料"));
 $("dl-data-fa").addEventListener("click",()=>dlData("因素分數資料"));
 $("dl-data-ca").addEventListener("click",()=>dlData("集群資料"));
-$("dl-data-seg").addEventListener("click",()=>dlData("集群資料"));
 $("dl-result").addEventListener("click",dlResult);
 $("alpha").addEventListener("input",()=>{ if (S.seg){ renderProfile(true); renderSegPrompt(); } });
 $("only-sig").addEventListener("change",()=>{ if (S.seg) renderProfile(true); });
