@@ -656,6 +656,9 @@ el.industry.value="retail"; el.freqType.value="consume"; el.chanMode.value="auto
 autoIndustry();
 build();
 })();
+
+/* 記住研究標的，供知覺定位問卷產生器帶入（同一網站、同一瀏覽器） */
+(function(){ const t=document.getElementById("target"); if (!t) return; t.addEventListener("input",()=>{ try{ localStorage.setItem("mr.researchTarget", t.value.trim()); }catch(e){} }); })();
 </script>
 </body>
 </html>

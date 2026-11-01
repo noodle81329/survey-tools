@@ -489,6 +489,7 @@ function doImport(silent){
   const g = el.brands.closest(".group"); if (g) g.scrollIntoView({behavior:"smooth", block:"start"});
 }
 $("btnImport").addEventListener("click", () => doImport(false));
+try{ const saved=localStorage.getItem("mr.researchTarget"); if (saved && !el.target.value){ el.target.value=saved; build(); } }catch(e){}
 $("import").addEventListener("paste", () => setTimeout(() => doImport(true), 0));
 $("btnClear").addEventListener("click", () => {
   F.forEach(k => { if (el[k].tagName!=="SELECT") el[k].value=""; }); $("import").value=""; $("n-import").textContent="";
