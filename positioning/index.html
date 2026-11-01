@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>知覺定位分析</title>
+<meta name="description" content="上傳知覺定位問卷資料，以雙重中心化與主成分分析繪製品牌知覺定位圖，投影理想點，檢驗市場區隔的偏好差異，並產生 AI 報告指令。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#f5f3ee; --surface:#ffffff; --surface-2:#faf8f3; --border:#ddd7c9; --border-strong:#c7bea9;
+  --ink:#232019; --ink-soft:#655e4d; --ink-faint:#8f886f;
+  --accent:#28594f; --accent-strong:#1b4139; --accent-soft:#e1ece7; --accent-contrast:#ffffff;
+  --warn:#95591b; --warn-soft:#f6ecda; --danger:#9c3b3b; --danger-soft:#f7e6e4;
+  --good:#3c6e3f; --good-soft:#e7f0e2; --pos:#1f6b55; --neg:#a24a3a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141612; --surface:#1c1f1a; --surface-2:#20241e; --border:#373d33; --border-strong:#4a5140;
+    --ink:#eae7dc; --ink-soft:#b7b3a1; --ink-faint:#847e69;
+    --accent:#79bda7; --accent-strong:#9bd2bf; --accent-soft:#213b34; --accent-contrast:#0c1210;
+    --warn:#dba064; --warn-soft:#3b2c19; --danger:#e08e8e; --danger-soft:#3c2320;
+    --good:#94c286; --good-soft:#25361f; --pos:#8fd0b8; --neg:#ec9d8c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141612; --surface:#1c1f1a; --surface-2:#20241e; --border:#373d33; --border-strong:#4a5140;
+  --ink:#eae7dc; --ink-soft:#b7b3a1; --ink-faint:#847e69;
+  --accent:#79bda7; --accent-strong:#9bd2bf; --accent-soft:#213b34; --accent-contrast:#0c1210;
+  --warn:#dba064; --warn-soft:#3b2c19; --danger:#e08e8e; --danger-soft:#3c2320;
+  --good:#94c286; --good-soft:#25361f; --pos:#8fd0b8; --neg:#ec9d8c;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.7}
+.toolbox-back{display:block;padding:10px 16px;font:500 14px/1.4 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:#ffffffcc;border-bottom:1px solid #ddd7c9}
+.toolbox-back a{color:#28594f;text-decoration:none}
+.toolbox-back a:hover{text-decoration:underline}
+@media (prefers-color-scheme:dark){.toolbox-back{background:#1c1f1acc;border-bottom-color:#373d33}.toolbox-back a{color:#79bda7}}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+.eyebrow{margin:0 0 6px;font-size:12.5px;letter-spacing:.12em;color:var(--accent);font-weight:700}
+h1{font-family:"Noto Serif TC",serif;font-size:clamp(25px,4vw,32px);margin:0 0 8px}
+.lede{margin:0 0 24px;color:var(--ink-soft);max-width:70ch}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+.panel h2{font-family:"Noto Serif TC",serif;font-size:19px;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+.step{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-contrast);font-family:"Noto Sans TC",sans-serif;font-size:14px;font-weight:700}
+.hint{color:var(--ink-soft);font-size:14px;margin:0 0 12px}
+.small{font-size:13px}
+h3{font-size:15.5px;margin:18px 0 8px;color:var(--accent-strong)}
+.dropzone{display:flex;align-items:center;justify-content:center;gap:10px;min-height:90px;border:2px dashed var(--border-strong);border-radius:10px;background:var(--surface-2);cursor:pointer;padding:14px;text-align:center;color:var(--ink-soft)}
+.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:10px 0}
+label.inline{display:inline-flex;align-items:center;gap:6px;font-size:14px}
+select,input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px}
+input[type=number]{width:72px}
+button{font:inherit;font-size:14px;border-radius:7px;padding:7px 14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent);font-weight:700}
+button.primary:disabled,button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{padding:3px 10px;font-size:13px}
+.groups{display:grid;gap:10px}
+.grp{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+.grp-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.grp-head strong{font-size:14.5px}
+.tag{font-size:12px;color:var(--ink-faint);border:1px solid var(--border);border-radius:999px;padding:0 8px;background:var(--surface)}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:2px 14px}
+.items label{display:flex;gap:6px;align-items:flex-start;font-size:13.5px;line-height:1.5;padding:2px 0}
+.items label input{margin-top:3px}
+.items label span.stem{color:var(--ink-faint)}
+.notice{border-radius:8px;padding:9px 13px;font-size:14px;margin:10px 0}
+.notice.warn{background:var(--warn-soft);color:var(--warn)}
+.notice.bad{background:var(--danger-soft);color:var(--danger)}
+.notice.ok{background:var(--good-soft);color:var(--good)}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 4px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:150px}
+.stat b{display:block;font-size:19px;color:var(--accent-strong);font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--ink-soft)}
+.table-scroll{overflow-x:auto;margin:6px 0}
+table{border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;min-width:100%}
+th,td{padding:5px 9px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+th{background:var(--surface-2);font-weight:700;color:var(--ink-soft)}
+th.l,td.l{text-align:left;white-space:normal;min-width:120px}
+td.stemcell{color:var(--ink-soft);font-size:12.5px;max-width:340px}
+tr.kept td{background:var(--accent-soft)}
+td.dom{font-weight:700;color:var(--accent-strong);background:var(--accent-soft)}
+td.cross{font-weight:700;color:var(--warn)}
+td.neg{font-weight:700;color:var(--danger)}
+td.low{color:var(--ink-faint)}
+td.flag{color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-soft);margin:4px 0 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+svg.scree{width:100%;max-width:560px;height:auto;display:block}
+svg.scree text{font-size:11px;fill:var(--ink-soft);font-family:inherit}
+pre.prompt{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:13px;line-height:1.7;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0 0;max-height:420px;overflow:auto}
+details summary{cursor:pointer;font-size:13.5px;color:var(--ink-soft);margin-top:10px}
+ol.steps{margin:0 0 12px;padding-left:22px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.faint{color:var(--ink-faint)}
+.chartbox{border:none}
+.chartbox svg{display:block;max-width:none}
+.fa1 td.c,.fa1 th{text-align:center;vertical-align:middle;white-space:nowrap}
+.fa1 td,.fa1 th{border:1px solid var(--border-strong)}
+.fa1 td.l{white-space:normal;min-width:260px}
+.fa1 td.wrap{white-space:normal;min-width:8em;max-width:16em}
+.namepaste textarea{display:block;width:100%;box-sizing:border-box;margin:8px 0 4px;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--warn);border-radius:6px;background:var(--surface);color:var(--ink);resize:vertical}
+.namepaste textarea:focus{outline:2px solid var(--warn);outline-offset:1px}
+.savebox{margin-top:18px;padding:12px 14px;border:1px dashed var(--border-strong);border-radius:8px;background:var(--surface-2)}
+.savebox h3{margin-top:0}
+.kit-h{margin-top:22px}
+.fa-cap{margin:8px 0 4px;font-weight:700}
+.fnames{display:grid;gap:8px;margin:8px 0}
+.fname{display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:6px 12px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2)}
+.fname label{font-size:14px}
+.fname label span{display:block;font-size:12.5px;color:var(--ink-faint)}
+@media (max-width:620px){.fname{grid-template-columns:minmax(0,1fr)}}
+input[type=text]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 9px;width:100%}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:64px;resize:vertical}
+.kpick{display:flex;flex-wrap:wrap;gap:8px}
+.kpick label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
+.kpick label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);font-weight:700}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin:8px 0}
+.chart{border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface-2)}
+.chart p{margin:0 0 2px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+svg.mini{width:100%;max-width:380px;height:auto;display:block;margin:0 auto}
+svg.mini text{font-size:11px;fill:var(--ink-soft);font-family:inherit}
+td.pos{color:var(--pos)}
+td.neg{color:var(--neg)}
+td.max{font-weight:700;background:var(--accent-soft)}
+td.up{color:var(--pos);font-weight:700}
+td.down{color:var(--neg);font-weight:700}
+td.hi{font-weight:700;color:var(--accent-strong)}
+tr.total td{font-weight:700;background:var(--surface-2)}
+tr.sigrow td.l{font-weight:700}
+.testtxt{font-family:"Noto Sans TC",sans-serif;font-weight:400;font-size:13px;color:var(--ink-faint);margin-left:10px}
+.testtxt.sig{color:var(--accent-strong);font-weight:700}
+.stage{margin:34px 0 14px;padding-top:10px;border-top:2px solid var(--border);font-family:"Noto Serif TC",serif;font-size:21px;color:var(--accent-strong)}
+.stage small{display:block;font-family:"Noto Sans TC",sans-serif;font-size:13.5px;font-weight:400;color:var(--ink-soft)}
+footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
+.mv{white-space:nowrap}
+.mv button{padding:0 6px;margin-left:3px;font-size:12px}
+.fname input{max-width:420px}
+.chartbox{overflow-x:auto}
+.chartbox svg{width:100%;max-width:820px;height:auto}
+.fname select{max-width:420px;width:100%}
+</style>
+</head>
+<body>
+<nav class="toolbox-back"><a href="../">← 回行銷研究工具箱</a></nav>
+<main>
+  <p class="eyebrow">行銷研究方法 · 統計分析</p>
+  <h1>知覺定位分析</h1>
+  <p class="lede">上傳知覺定位問卷的資料檔，以各品牌的特質勾選率建立評分表，經雙重中心化後以主成分分析（因素分析法）繪製知覺定位圖；偏好題以補充點投影為理想點，並以變異數分析檢驗各市場區隔的偏好是否不同。所有計算都在瀏覽器中完成。</p>
+
+  <!-- 1 上傳 -->
+  <section class="panel" aria-labelledby="h1s">
+    <h2 id="h1s"><span class="step">1</span>上傳資料</h2>
+    <p class="hint">請上傳<a href="../organizer/">問卷資料整理器</a>下載的 Excel 檔。資料須包含：各品牌的特質複選題（每個品牌一組 0／1 欄，例如 B1_低熱量、B2_低熱量⋯⋯）、相同特質的偏好題（例如 P_低熱量），以及選填的「最近一次消費品牌」與「市場區隔」欄。市場區隔欄可由<a href="../segment/">市場區隔分析</a>下載的資料檔取得，貼到同一份資料中。</p>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+      <span id="dz-label">選擇或拖曳 Excel／CSV 檔案到這裡</span>
+    </label>
+    <div id="src-sum"></div>
+  </section>
+
+  <!-- 2 設定 -->
+  <section class="panel" id="sec-set" aria-labelledby="h2s" hidden>
+    <h2 id="h2s"><span class="step">2</span>確認變數</h2>
+    <p class="hint">工具已依欄名自動判斷各題組；判斷有誤時請在此調整。品牌名稱取自題目中的「」，可直接修改。</p>
+    <h3>品牌特質題組（品牌 × 特質）</h3>
+    <div id="brand-list" class="fnames"></div>
+    <div class="fnames">
+      <div class="fname"><label for="sel-pref">偏好題組<span>「整體而言，您偏好具備以下哪些特質⋯⋯」，用來計算理想點</span></label><select id="sel-pref"></select></div>
+      <div class="fname"><label for="sel-buy">最近一次消費品牌（選填）<span>決定品牌圓的面積；未選擇時各品牌的圓一樣大</span></label><select id="sel-buy"></select></div>
+      <div class="fname"><label for="sel-seg">市場區隔變數（選填）<span>用來檢驗各區隔的偏好是否不同</span></label><select id="sel-seg"></select></div>
+      <div class="fname"><label for="in-target">研究標的<span>例：包裝綠茶；寫入報告指令</span></label><input type="text" id="in-target"></div>
+      <div class="fname"><label for="sel-focal">本研究品牌（選填）<span>選擇後，定位策略只針對此品牌撰寫</span></label><select id="sel-focal"></select></div>
+    </div>
+    <div class="row">
+      <label class="inline">顯著水準 α <select id="sel-alpha"><option value="0.2">.20</option><option value="0.1">.10</option><option value="0.05">.05</option></select></label>
+      <label class="inline">評分表粗體門檻：比預期高 <input type="number" id="in-thr" value="5" min="1" max="30" step="1"> 個百分點以上</label>
+    </div>
+    <div id="set-msg"></div>
+  </section>
+
+  <!-- 3 評分表 -->
+  <section class="panel" id="sec-t1" aria-labelledby="h3s" hidden>
+    <h2 id="h3s"><span class="step">3</span>評分表</h2>
+    <p class="hint">各品牌在各特質上的勾選率，以及偏好題的勾選率（理想點），分母皆為全部有效樣本。依偏好勾選率由高到低排列。粗體表示雙重中心化後的殘差達門檻，也就是排除品牌規模（品牌整體被勾選的多寡）與特質普及程度（所有品牌都常被勾選）之後，該品牌在該特質上仍明顯高於預期。</p>
+    <div id="t1-out"></div>
+    <div class="row"><button type="button" id="btn-copy-t1">複製表1（貼到 Word）</button></div>
+  </section>
+
+  <!-- 4 區隔偏好 -->
+  <section class="panel" id="sec-t2" aria-labelledby="h4s" hidden>
+    <h2 id="h4s"><span class="step">4</span>市場區隔的偏好差異</h2>
+    <p class="hint">以單因子變異數分析檢驗各區隔在每項偏好特質的勾選率是否不同（勾選為 1、未勾選為 0）。大多數特質未達顯著時，表示各區隔的偏好相近，知覺圖只畫全體的理想點；半數以上達顯著時，改畫各區隔的理想點。</p>
+    <div id="t2-out"></div>
+    <div class="row">
+      <button type="button" id="btn-copy-t2">複製表2（貼到 Word）</button>
+      <label class="inline">理想點 <select id="sel-ideal"><option value="auto">依檢定結果自動決定</option><option value="all">只畫全體理想點</option><option value="seg">畫各區隔理想點</option></select></label>
+    </div>
+  </section>
+
+  <!-- 5 知覺圖 -->
+  <section class="panel" id="sec-map" aria-labelledby="h5s" hidden>
+    <h2 id="h5s"><span class="step">5</span>知覺定位圖</h2>
+    <p class="hint">評分表經雙重中心化（減去品牌平均與特質平均）後進行主成分分析，取前兩個主成分繪圖。品牌以圓表示，圓的面積與最近一次消費比例成正比；特質以箭頭表示，品牌愈靠近箭頭方向，愈具有該特質，箭頭愈粗表示偏好勾選率愈高；理想點（☆）以偏好題的勾選率作為補充點投影，計算方式與品牌相同。座標軸不命名，只標示解釋變異量。</p>
+    <div class="chartbox" id="map-out"></div>
+    <div class="row">
+      <button type="button" id="btn-copy-map">複製圖1（貼到 Word）</button>
+      <button type="button" id="btn-png-map">下載圖1 PNG</button>
+    </div>
+    <h3>表3　品牌座標與理想點距離</h3>
+    <div id="t3-out"></div>
+    <div class="row">
+      <button type="button" id="btn-copy-t3">複製表3（貼到 Word）</button>
+      <button type="button" id="btn-xlsx">下載 Excel（全部表格）</button>
+    </div>
+  </section>
+
+  <!-- 6 AI 報告指令 -->
+  <section class="panel" id="sec-prompt" aria-labelledby="h6s" hidden>
+    <h2 id="h6s"><span class="step">6</span>AI 報告指令：知覺定位分析</h2>
+    <p class="hint">指令已自動填入評分表、區隔偏好檢定、主成分結果與品牌座標。複製後貼到 AI 對話中，AI 會撰寫「知覺定位分析」一節：（一）評分表分析、（二）市場區隔的偏好差異、（三）知覺圖分析、（四）品牌定位策略。</p>
+    <div class="row">
+      <button type="button" class="primary" id="btn-copy-prompt">複製知覺定位分析報告指令</button>
+      <span class="hint small" id="prompt-len" style="margin:0"></span>
+    </div>
+    <details><summary>檢視指令內容</summary><pre class="prompt" id="prompt-out"></pre></details>
+  </section>
+
+  <footer>所有計算都在您的瀏覽器中完成，資料不會上傳。本工具不使用 AI 服務；報告由您把指令貼到自己的 AI 對話中產生。</footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2200); }
+const pct=x=>(x*100).toFixed(0)+"%";
+const pct1=x=>(x*100).toFixed(1)+"%";
+const f1=x=>(x>=0?"":"−")+Math.abs(x).toFixed(1);
+const f2=x=>x==null||!isFinite(x)?"—":x.toFixed(2);
+const fp=p=>p<.001?"< .001":p.toFixed(3).replace(/^0/,"");
+const fa=a=>Number(a).toFixed(2).replace(/^0/,"");
+
+const S={ file:"", headers:[], rows:[], meta:{}, gnames:{}, gstems:{}, groups:{}, codes:[], brandCodes:[], names:{}, pref:"", buy:"", seg:"", R:null };
+
+/* ---------- 統計函數 ---------- */
+function lnGamma(x){
+  const g=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x, tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp); let ser=1.000000000190015;
+  for (let j=0;j<6;j++) ser+=g[j]/++y;
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function betacf(x,a,b){
+  const MAXIT=300, EPS=3e-16, FPMIN=1e-300;
+  let qab=a+b, qap=a+1, qam=a-1, c=1, d=1-qab*x/qap;
+  if (Math.abs(d)<FPMIN) d=FPMIN; d=1/d; let h=d;
+  for (let m=1;m<=MAXIT;m++){
+    const m2=2*m;
+    let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if (Math.abs(d)<FPMIN) d=FPMIN; c=1+aa/c; if (Math.abs(c)<FPMIN) c=FPMIN; d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if (Math.abs(d)<FPMIN) d=FPMIN; c=1+aa/c; if (Math.abs(c)<FPMIN) c=FPMIN; d=1/d;
+    const del=d*c; h*=del; if (Math.abs(del-1)<EPS) break;
+  }
+  return h;
+}
+function ibeta(x,a,b){
+  if (x<=0) return 0; if (x>=1) return 1;
+  const bt=Math.exp(lnGamma(a+b)-lnGamma(a)-lnGamma(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2) ? bt*betacf(x,a,b)/a : 1-bt*betacf(1-x,b,a)/b;
+}
+function fP(F,d1,d2){ if (!(F>0)) return 1; return ibeta(d2/(d2+d1*F),d2/2,d1/2); }
+function anova(g){
+  const gs=g.filter(x=>x.length>0); if (gs.length<2) return null;
+  const all=[].concat(...gs), N=all.length, m=all.reduce((s,x)=>s+x,0)/N;
+  let ssb=0, ssw=0;
+  gs.forEach(x=>{ const mi=x.reduce((s,y)=>s+y,0)/x.length; ssb+=x.length*(mi-m)*(mi-m); x.forEach(y=>ssw+=(y-mi)*(y-mi)); });
+  const df1=gs.length-1, df2=N-gs.length;
+  if (df2<1||ssw<=0) return null;
+  const F=(ssb/df1)/(ssw/df2);
+  return {F, df1, df2, p:fP(F,df1,df2)};
+}
+/* 對稱矩陣特徵值（Jacobi 法），回傳由大到小 */
+function eigSym(A0){
+  const n=A0.length, A=A0.map(r=>r.slice()), V=A0.map((_,i)=>A0.map((_,j)=>i===j?1:0));
+  for (let sweep=0;sweep<100;sweep++){
+    let off=0; for (let p=0;p<n;p++) for (let q=p+1;q<n;q++) off+=A[p][q]*A[p][q];
+    if (off<1e-22) break;
+    for (let p=0;p<n;p++) for (let q=p+1;q<n;q++){
+      if (Math.abs(A[p][q])<1e-15) continue;
+      const th=(A[q][q]-A[p][p])/(2*A[p][q]), t=Math.sign(th||1)/(Math.abs(th)+Math.sqrt(th*th+1)), c=1/Math.sqrt(t*t+1), s=t*c;
+      for (let k=0;k<n;k++){ const akp=A[k][p], akq=A[k][q]; A[k][p]=c*akp-s*akq; A[k][q]=s*akp+c*akq; }
+      for (let k=0;k<n;k++){ const apk=A[p][k], aqk=A[q][k]; A[p][k]=c*apk-s*aqk; A[q][k]=s*apk+c*aqk; }
+      for (let k=0;k<n;k++){ const vkp=V[k][p], vkq=V[k][q]; V[k][p]=c*vkp-s*vkq; V[k][q]=s*vkp+c*vkq; }
+    }
+  }
+  const idx=A.map((_,i)=>i).sort((a,b)=>A[b][b]-A[a][a]);
+  return {val:idx.map(i=>Math.max(0,A[i][i])), vec:idx.map(i=>V.map(r=>r[i]))};
+}
+
+/* ---------- 讀檔 ---------- */
+function readFile(file){
+  const rd=new FileReader(); S.file=file.name;
+  rd.onload=()=>{
+    try{
+      const isCsv=/\.csv$/i.test(file.name);
+      const wb=isCsv?XLSX.read(rd.result,{type:"string"}):XLSX.read(new Uint8Array(rd.result),{type:"array"});
+      load(wb);
+    }catch(e){ console.error(e); toast("無法讀取這個檔案"); }
+  };
+  if (/\.csv$/i.test(file.name)) rd.readAsText(file,"utf-8"); else rd.readAsArrayBuffer(file);
+}
+function aoaOf(wb,name){ return XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:"",raw:true,blankrows:false}); }
+function numOf(v){ if (v===""||v==null) return null; const x=Number(v); return isFinite(x)?x:null; }
+function load(wb){
+  const dn=wb.SheetNames.includes("資料")?"資料":wb.SheetNames[0];
+  const aoa=aoaOf(wb,dn); if (!aoa.length){ toast("資料工作表沒有內容"); return; }
+  S.headers=aoa[0].map(h=>String(h).trim()); S.rows=aoa.slice(1).filter(r=>r.some(v=>String(v).trim()!==""));
+  S.gnames={}; S.gstems={}; S.meta={};
+  if (wb.SheetNames.includes("題組")) aoaOf(wb,"題組").slice(1).forEach(r=>{ const c=String(r[0]||"").trim(); if (c){ S.gnames[c]=String(r[1]||"").trim(); S.gstems[c]=String(r[2]||"").trim(); } });
+  if (wb.SheetNames.includes("欄名對照表")){
+    const cb=aoaOf(wb,"欄名對照表"), hi=cb.findIndex(r=>r.some(x=>String(x).trim()==="新欄名"));
+    if (hi>=0){ const h=cb[hi].map(x=>String(x).trim()), cN=h.indexOf("新欄名"), cQ=h.indexOf("原題目");
+      for (let i=hi+1;i<cb.length;i++){ const n=String(cb[i][cN]||"").trim(); if (n&&cQ>=0) S.meta[n]={q:String(cb[i][cQ]||"").trim()}; } }
+  }
+  detect();
+}
+
+/* ---------- 自動判斷 ---------- */
+function detect(){
+  const H=S.headers, G={};
+  H.forEach((h,ci)=>{
+    const m=/^(.+?)_(.+)$/.exec(h); if (!m) return;
+    const vals=S.rows.map(r=>numOf(r[ci])).filter(x=>x!==null);
+    if (!vals.length||!vals.every(x=>x===0||x===1)) return;
+    (G[m[1]]=G[m[1]]||[]).push({attr:m[2], ci});
+  });
+  S.groups=G;
+  // 以最常見的特質組合找出品牌題組與偏好題組
+  const sig=c=>G[c].map(o=>o.attr).sort().join("|");
+  const cnt={}; Object.keys(G).forEach(c=>{ const k=sig(c); cnt[k]=(cnt[k]||0)+1; });
+  const best=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  const same=best?Object.keys(G).filter(c=>sig(c)===best):[];
+  S.codes=Object.keys(G);
+  const isPref=c=>/偏好/.test(S.gnames[c]||"")||/偏好/.test(stemOf(c))||/^P$/i.test(c);
+  S.pref=same.find(isPref)||S.codes.find(isPref)||"";
+  S.brandCodes=same.filter(c=>c!==S.pref);
+  S.names={}; S.codes.forEach(c=>S.names[c]=guessName(c));
+  // 單選欄
+  const single=H.map((h,ci)=>({h,ci,u:new Set(S.rows.map(r=>String(r[ci]).trim()).filter(v=>v!==""))})).filter(o=>!/_/.test(o.h)&&o.u.size>=2&&o.u.size<=20&&!/^id$/i.test(o.h));
+  S.single=single;
+  const bn=new Set(S.brandCodes.map(c=>S.names[c]));
+  const buy=single.map(o=>({o,k:[...o.u].filter(v=>bn.has(v)).length})).sort((a,b)=>b.k-a.k)[0];
+  S.buy=buy&&buy.k>=2?buy.o.h:"";
+  const seg=single.find(o=>/區隔|集群|群別|分群/.test(o.h)&&o.u.size<=10);
+  S.seg=seg?seg.h:"";
+  let tg=""; try{ tg=localStorage.getItem("mr.researchTarget")||""; }catch(e){}
+  if (!tg){ const m=/特質的(.+?)[？?]/.exec(stemOf(S.pref)); if (m) tg=m[1].trim(); }
+  $("in-target").value=tg;
+  renderSettings(); compute();
+}
+function stemOf(c){ if (!c) return ""; if (S.gstems[c]) return S.gstems[c]; const g=S.groups[c]; if (g&&S.meta[S.headers[g[0].ci]]) return S.meta[S.headers[g[0].ci]].q; return ""; }
+function guessName(c){
+  const st=stemOf(c), m=/「\s*([^」]+?)\s*」/.exec(st); if (m) return m[1].trim();
+  const h=S.headers.find(x=>x.startsWith(c)&&x.length>c.length&&!x.includes("_")&&!/滿意|再購|推薦/.test(x));
+  if (h) return h.slice(c.length).trim();
+  return c;
+}
+
+/* ---------- 設定介面 ---------- */
+function renderSettings(){
+  $("sec-set").hidden=false;
+  const G=S.groups, codes=S.codes;
+  $("src-sum").innerHTML='<p class="notice ok">已讀取「'+esc(S.file)+'」：有效樣本 '+S.rows.length+' 筆，偵測到 '+codes.length+' 個 0／1 題組。</p>';
+  $("brand-list").innerHTML=codes.filter(c=>c!==S.pref).map(c=>'<div class="fname"><label><input type="checkbox" data-bc="'+esc(c)+'"'+(S.brandCodes.includes(c)?" checked":"")+'> 題組 '+esc(c)+'<span>'+esc(stemOf(c)||(G[c].length+" 個選項"))+'</span></label><input type="text" data-bn="'+esc(c)+'" value="'+esc(S.names[c])+'" aria-label="題組 '+esc(c)+' 的品牌名稱"></div>').join("");
+  $("sel-pref").innerHTML='<option value="">（未選擇）</option>'+codes.map(c=>'<option value="'+esc(c)+'"'+(c===S.pref?" selected":"")+'>'+esc(c)+(stemOf(c)?"："+esc(stemOf(c)).slice(0,40):"")+'</option>').join("");
+  const opt=(cur)=>'<option value="">（不使用）</option>'+S.single.map(o=>'<option value="'+esc(o.h)+'"'+(o.h===cur?" selected":"")+'>'+esc(o.h)+'（'+o.u.size+' 類）</option>').join("");
+  $("sel-buy").innerHTML=opt(S.buy); $("sel-seg").innerHTML=opt(S.seg);
+  renderFocal();
+}
+function renderFocal(){
+  const cur=$("sel-focal").value;
+  $("sel-focal").innerHTML='<option value="">（不指定，所有品牌都寫）</option>'+S.brandCodes.map(c=>'<option value="'+esc(c)+'"'+(c===cur?" selected":"")+'>'+esc(S.names[c])+'</option>').join("");
+}
+$("brand-list").addEventListener("change",e=>{
+  const c=e.target.dataset.bc; if (c!=null){ S.brandCodes=S.codes.filter(x=>x!==S.pref&&($('brand-list').querySelector('[data-bc="'+CSS.escape(x)+'"]')||{}).checked); renderFocal(); compute(); }
+});
+$("brand-list").addEventListener("input",e=>{ const c=e.target.dataset.bn; if (c!=null){ S.names[c]=e.target.value.trim()||c; renderFocal(); compute(); } });
+$("sel-pref").addEventListener("change",e=>{ S.pref=e.target.value; S.brandCodes=S.brandCodes.filter(c=>c!==S.pref); renderSettings(); compute(); });
+$("sel-buy").addEventListener("change",e=>{ S.buy=e.target.value; compute(); });
+$("sel-seg").addEventListener("change",e=>{ S.seg=e.target.value; compute(); });
+["sel-alpha","in-thr","sel-ideal","sel-focal"].forEach(id=>$(id).addEventListener("change",compute));
+$("in-thr").addEventListener("input",compute);
+$("in-target").addEventListener("input",()=>{ try{ localStorage.setItem("mr.researchTarget",$("in-target").value.trim()); }catch(e){} renderPrompt(); });
+
+/* ---------- 計算 ---------- */
+function compute(){
+  const msg=[];
+  const bc=S.brandCodes, pc=S.pref;
+  if (bc.length<3) msg.push("至少需要 3 個品牌題組。");
+  if (!pc) msg.push("請選擇偏好題組。");
+  let attrs=[];
+  if (!msg.length){
+    attrs=S.groups[pc].map(o=>o.attr).filter(a=>bc.every(c=>S.groups[c].some(o=>o.attr===a)));
+    if (attrs.length<3) msg.push("品牌題組與偏好題組共同的特質少於 3 項，請確認各題組的欄名（底線後的特質名稱）一致。");
+  }
+  $("set-msg").innerHTML=msg.map(m=>'<p class="notice bad">'+esc(m)+'</p>').join("");
+  ["sec-t1","sec-t2","sec-map","sec-prompt"].forEach(id=>$(id).hidden=!!msg.length);
+  if (msg.length){ S.R=null; return; }
+  const N=S.rows.length, colOf=(c,a)=>S.groups[c].find(o=>o.attr===a).ci;
+  const rate=(c,rows)=>attrs.map(a=>{ const ci=colOf(c,a); let s=0; rows.forEach(r=>{ if (numOf(r[ci])===1) s++; }); return s/rows.length; });
+  const B=bc.length, M=attrs.length;
+  const X=bc.map(c=>rate(c,S.rows)), P=rate(pc,S.rows);
+  const rm=X.map(r=>r.reduce((s,x)=>s+x,0)/M), cm=attrs.map((_,j)=>X.reduce((s,r)=>s+r[j],0)/B), gm=rm.reduce((s,x)=>s+x,0)/B;
+  const D=X.map((r,i)=>r.map((x,j)=>x-rm[i]-cm[j]+gm));
+  // SVD：D D' 的特徵分解
+  const DDt=D.map(a=>D.map(b=>a.reduce((s,x,j)=>s+x*b[j],0)));
+  const E=eigSym(DDt), tot=E.val.reduce((s,x)=>s+x,0);
+  const K=Math.min(2,E.val.filter(x=>x>1e-12).length);
+  const ve=E.val.map(x=>x/tot);
+  const sv=E.val.slice(0,2).map(Math.sqrt);
+  const F=bc.map((_,i)=>[0,1].map(k=>k<K?E.vec[k][i]*sv[k]:0));
+  const V=attrs.map((_,j)=>[0,1].map(k=>k<K?D.reduce((s,r,i)=>s+r[j]*E.vec[k][i],0)/sv[k]:0));
+  const proj=p=>{ const pm=p.reduce((s,x)=>s+x,0)/M, d=p.map((x,j)=>x-pm-cm[j]+gm); return [0,1].map(k=>d.reduce((s,x,j)=>s+x*V[j][k],0)); };
+  let I=proj(P);
+  // 方向：讓全體理想點落在第一象限
+  const sgn=[I[0]<0?-1:1, I[1]<0?-1:1];
+  F.forEach(f=>{ f[0]*=sgn[0]; f[1]*=sgn[1]; }); V.forEach(v=>{ v[0]*=sgn[0]; v[1]*=sgn[1]; });
+  I=proj(P);
+  // 屬性在二維圖上的解釋比例
+  const fit=attrs.map((_,j)=>{ const ss=D.reduce((s,r)=>s+r[j]*r[j],0); let e=0; for (let k=0;k<2;k++) e+=Math.pow(V[j][k]*sv[k],2); return ss>0?e/ss:0; });
+  // 購買比例
+  let share=null, shareOther=null;
+  if (S.buy){
+    const ci=S.headers.indexOf(S.buy), vals=S.rows.map(r=>String(r[ci]).trim());
+    share=bc.map(c=>vals.filter(v=>v===S.names[c]).length/N);
+    shareOther=1-share.reduce((s,x)=>s+x,0);
+  }
+  // 區隔
+  let seg=null;
+  if (S.seg){
+    const ci=S.headers.indexOf(S.seg);
+    const labs=[...new Set(S.rows.map(r=>String(r[ci]).trim()).filter(v=>v!==""))].sort((a,b)=>a.localeCompare(b,"zh-Hant",{numeric:true}));
+    const sub=labs.map(l=>S.rows.filter(r=>String(r[ci]).trim()===l));
+    const alpha=+$("sel-alpha").value;
+    const tests=attrs.map(a=>{ const ci2=colOf(pc,a); return anova(sub.map(rs=>rs.map(r=>numOf(r[ci2])===1?1:0))); });
+    const rates=sub.map(rs=>rate(pc,rs));
+    const nsig=tests.filter(t=>t&&t.p<alpha).length;
+    seg={labs, n:sub.map(x=>x.length), rates, tests, nsig, alpha, I:rates.map(proj)};
+  }
+  const mode=$("sel-ideal").value;
+  const useSeg=!!seg&&(mode==="seg"||(mode==="auto"&&seg.nsig>=M/2));
+  const ideals=[{name:"全體",xy:I,main:true}].concat(useSeg?seg.labs.map((l,g)=>({name:l,xy:seg.I[g]})):[]);
+  const dist=bc.map((_,i)=>ideals.map(o=>Math.hypot(F[i][0]-o.xy[0],F[i][1]-o.xy[1])));
+  const order=attrs.map((_,j)=>j).sort((a,b)=>P[b]-P[a]);
+  S.R={attrs,bc,names:bc.map(c=>S.names[c]),X,P,D,F,V,I,ve,sv,fit,share,shareOther,seg,useSeg,ideals,dist,order,N,thr:(+$("in-thr").value||5)/100};
+  renderT1(); renderT2(); renderMap(); renderT3(); renderPrompt();
+}
+
+/* ---------- 表格 ---------- */
+const W_STYLE=(extra)=>"font-family:'Times New Roman','新細明體',serif;font-size:10pt;line-height:1.0;color:#000;padding:1pt 5pt;vertical-align:middle;border:1px solid #000;"+(extra||"");
+function cellFns(word){
+  return {
+    td:(t,al,extra)=>word?'<td'+(extra||"")+' style="'+W_STYLE("text-align:"+(al||"center")+";")+'">'+t+'</td>':'<td'+(extra||"")+' class="'+(al==="left"?"l":"c")+'">'+t+'</td>',
+    th:(t,extra)=>word?'<th'+(extra||"")+' style="'+W_STYLE("text-align:center;font-weight:normal;")+'">'+t+'</th>':'<th'+(extra||"")+'>'+t+'</th>',
+    open:word?'<table style="border-collapse:collapse;border:1px solid #000;">':'<table class="fa1">'
+  };
+}
+const dec2=x=>x.toFixed(2).replace(/^0/,"").replace(/^-0/,"−");
+function t1HTML(word){
+  const R=S.R, {td,th,open}=cellFns(word);
+  let h=open+'<thead><tr>'+th("定位基礎")+R.names.map(n=>th(esc(n))).join("")+th("理想點<br>（偏好）")+'</tr></thead><tbody>';
+  R.order.forEach(j=>{
+    h+='<tr>'+td(esc(R.attrs[j]),"left")+R.X.map((r,i)=>{ const v=dec2(r[j]); return td(R.D[i][j]>=R.thr?'<b><i>'+v+'</i></b>':v); }).join("")+td(dec2(R.P[j]))+'</tr>';
+  });
+  h+='</tbody></table>';
+  return h;
+}
+function t1Note(){ const R=S.R; return "註：n = "+R.N+"；數值為勾選率。粗斜體表示排除品牌規模與特質普及程度後，勾選率仍比預期高 "+Math.round(R.thr*100)+" 個百分點以上（雙重中心化殘差 ≥ "+dec2(R.thr)+"）。依理想點（偏好）勾選率由高到低排列。"; }
+function renderT1(){ $("t1-out").innerHTML='<p class="fa-cap">表1　評分表</p><div class="table-scroll">'+t1HTML(false)+'</div><p class="hint small">'+esc(t1Note())+'</p>'; }
+function t2HTML(word){
+  const R=S.R, sg=R.seg, {td,th,open}=cellFns(word);
+  let h=open+'<thead><tr>'+th("定位基礎")+th("全體<br>（n = "+R.N+"）")+sg.labs.map((l,g)=>th(esc(l)+"<br>（n = "+sg.n[g]+"）")).join("")+th("<i>F</i>")+th("<i>p</i>")+'</tr></thead><tbody>';
+  R.order.forEach(j=>{
+    const t=sg.tests[j], sig=t&&t.p<sg.alpha;
+    const mx=Math.max(...sg.rates.map(r=>r[j])), mn=Math.min(...sg.rates.map(r=>r[j]));
+    h+='<tr>'+td(esc(R.attrs[j]),"left")+td(pct(R.P[j]))+sg.rates.map(r=>{ let v=pct(r[j]); if (sig&&r[j]===mx) v+=" ▲"; else if (sig&&r[j]===mn) v+=" ▽"; return td(v); }).join("")+td(t?f2(t.F):"—")+td(t?(sig?"<b>"+fp(t.p)+"</b>":fp(t.p)):"—")+'</tr>';
+  });
+  return h+'</tbody></table>';
+}
+function t2Note(){ const R=S.R, sg=R.seg; return "註：數值為偏好勾選率；以單因子變異數分析檢定，df = ("+(sg.tests.find(t=>t)||{df1:"—"}).df1+", "+(sg.tests.find(t=>t)||{df2:"—"}).df2+")。本研究令顯著水準 α = "+fa(sg.alpha)+"，粗體 p 值表示達顯著；達顯著的特質以 ▲ 標示勾選率最高的區隔、▽ 標示最低的區隔。"; }
+function renderT2(){
+  const R=S.R, sg=R.seg;
+  $("sec-t2").hidden=!sg;
+  if (!sg) return;
+  const M=R.attrs.length, dec=R.useSeg?"畫各區隔的理想點":"只畫全體的理想點";
+  const auto=sg.nsig>=M/2?"半數以上達顯著，依規則應畫各區隔的理想點":"大多數未達顯著，依規則只畫全體的理想點";
+  $("t2-out").innerHTML='<p class="notice '+(sg.nsig>=M/2?"warn":"ok")+'">'+M+' 項特質中有 '+sg.nsig+' 項達顯著（α = '+fa(sg.alpha)+'）：'+auto+'。目前知覺圖：'+dec+'。</p><p class="fa-cap">表2　各市場區隔的偏好勾選率與變異數分析</p><div class="table-scroll">'+t2HTML(false)+'</div><p class="hint small">'+esc(t2Note())+'</p>';
+}
+function t3Rows(){
+  const R=S.R;
+  return R.bc.map((_,i)=>i).sort((a,b)=>R.dist[a][0]-R.dist[b][0]);
+}
+function t3HTML(word){
+  const R=S.R, {td,th,open}=cellFns(word), id=R.ideals;
+  let h=open+'<thead><tr>'+th("品牌")+(R.share?th("最近一次<br>消費比例"):"")+th("第一軸<br>（"+pct1(R.ve[0])+"）")+th("第二軸<br>（"+pct1(R.ve[1])+"）")+id.map(o=>th("與"+esc(o.name)+"<br>理想點距離")).join("")+'</tr></thead><tbody>';
+  t3Rows().forEach(i=>{ h+='<tr>'+td(esc(R.names[i]),"left")+(R.share?td(pct1(R.share[i])):"")+td(f1(R.F[i][0]*100))+td(f1(R.F[i][1]*100))+R.dist[i].map(d=>td(f1(d*100))).join("")+'</tr>'; });
+  id.forEach(o=>{ h+='<tr>'+td(esc(o.name)+"理想點","left")+(R.share?td(""):"")+td(f1(o.xy[0]*100))+td(f1(o.xy[1]*100))+id.map(()=>td("")).join("")+'</tr>'; });
+  return h+'</tbody></table>';
+}
+function t3Note(){ const R=S.R; return "註：座標與距離以百分點為單位（雙重中心化勾選率 × 100）；品牌依與全體理想點的距離由近到遠排列。前兩個主成分合計解釋 "+pct1(R.ve[0]+R.ve[1])+" 的變異。"+(R.share?"最近一次消費比例以全部有效樣本為分母，「以上皆非」占 "+pct1(R.shareOther)+"。":""); }
+function renderT3(){ $("t3-out").innerHTML='<div class="table-scroll">'+t3HTML(false)+'</div><p class="hint small">'+esc(t3Note())+'</p>'; }
+
+/* ---------- 知覺圖 ---------- */
+function textW(s,fs){ let w=0; for (const ch of String(s)) w+=/[\x00-\x7f]/.test(ch)?fs*0.58:fs; return w; }
+function mapSVG(){
+  const R=S.R;
+  const maxF=Math.max(...R.F.map(f=>Math.hypot(f[0],f[1])),1e-9), maxV=Math.max(...R.V.map(v=>Math.hypot(v[0],v[1])),1e-9);
+  const c=maxF/maxV;
+  const pts=R.F.concat(R.V.map(v=>[v[0]*c,v[1]*c]),R.ideals.map(o=>o.xy),[[0,0]]);
+  let x0=Math.min(...pts.map(p=>p[0])), x1=Math.max(...pts.map(p=>p[0])), y0=Math.min(...pts.map(p=>p[1])), y1=Math.max(...pts.map(p=>p[1]));
+  const pad=0.08*Math.max(x1-x0,y1-y0); x0-=pad; x1+=pad; y0-=pad; y1+=pad;
+  const k=Math.min(600/(x1-x0),560/(y1-y0)), ML=120, MT=96, PB=96;
+  const W=Math.round((x1-x0)*k+2*ML), Hh=Math.round((y1-y0)*k+MT+PB);
+  const cx=ML-x0*k, cy=MT+y1*k, X=x=>cx+x*k, Y=y=>cy-y*k;
+  const px0=ML-10, px1=W-ML+10, py0=MT-10, py1=MT+(y1-y0)*k+10;
+  const maxS=R.share?Math.max(...R.share):1, rMax=40;
+  const rad=R.bc.map((_,i)=>R.share?Math.max(10,rMax*Math.sqrt(R.share[i]/maxS)):30);
+  const pmax=Math.max(...R.P);
+  let g='<rect width="100%" height="100%" fill="#fff"/>';
+  g+='<line x1="'+px0+'" y1="'+cy.toFixed(1)+'" x2="'+px1+'" y2="'+cy.toFixed(1)+'" stroke="#9a9a9a" stroke-width="1"/><line x1="'+cx.toFixed(1)+'" y1="'+py0+'" x2="'+cx.toFixed(1)+'" y2="'+py1+'" stroke="#9a9a9a" stroke-width="1"/>';
+  g+='<text x="'+px1+'" y="'+(cy+18).toFixed(1)+'" font-size="12" fill="#555" text-anchor="end">第一軸（'+pct1(R.ve[0])+'）</text>';
+  g+='<text x="'+cx.toFixed(1)+'" y="'+(py0-6)+'" font-size="12" fill="#555" text-anchor="middle">第二軸（'+pct1(R.ve[1])+'）</text>';
+  // 箭頭
+  const tips=R.V.map(v=>[X(v[0]*c),Y(v[1]*c)]);
+  let defs='<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4472C4"/></marker></defs>';
+  let arrows=""; R.attrs.forEach((a,j)=>{ const sw=0.8+4.2*R.P[j]/pmax; arrows+='<line x1="'+cx+'" y1="'+cy+'" x2="'+tips[j][0].toFixed(1)+'" y2="'+tips[j][1].toFixed(1)+'" stroke="#4472C4" stroke-width="'+sw.toFixed(2)+'" marker-end="url(#ah)"/>'; });
+  // 標籤配置
+  const obst=R.F.map((f,i)=>({x:X(f[0]),y:Y(f[1]),r:rad[i]+4})).concat(R.ideals.map(o=>({x:X(o.xy[0]),y:Y(o.xy[1]),r:20})),[{x:cx,y:py0-10,r:30},{x:cx-36,y:py0-10,r:16},{x:cx+36,y:py0-10,r:16},{x:px1-40,y:cy+14,r:28}]);
+  const labs=R.attrs.map((a,j)=>{ const dx=tips[j][0]-cx, dy=tips[j][1]-cy, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L, w=Math.max(textW(a,12.5),textW("00%",11))+6, h=32; const d=Math.max(L,90)+Math.abs(ux)*w/2+Math.abs(uy)*h/2+4; return {x:cx+ux*d,y:cy+uy*d,w,h,ax:tips[j][0],ay:tips[j][1],t:a,p:R.P[j]}; });
+  R.ideals.forEach(o=>{ const t=R.ideals.length>1?o.name:"理想點", x=X(o.xy[0]), y=Y(o.xy[1]); labs.push({x, y:y+(o.main?30:26), w:textW(t,12.5)+6, h:16, ax:x, ay:y, t, ideal:true, col:o.main?"#c00000":"#c55a11"}); });
+  for (let it=0;it<400;it++){
+    let moved=false;
+    for (let a=0;a<labs.length;a++){
+      const A=labs[a];
+      for (let b=0;b<labs.length;b++){ if (a===b) continue; const Bb=labs[b]; const ox=(A.w+Bb.w)/2+2-Math.abs(A.x-Bb.x), oy=(A.h+Bb.h)/2+1-Math.abs(A.y-Bb.y);
+        if (ox>0&&oy>0){ moved=true; if (ox<oy){ A.x+=(A.x>=Bb.x?1:-1)*Math.min(ox/2+.5,3); } else { A.y+=(A.y>=Bb.y?1:-1)*Math.min(oy/2+.5,3); } } }
+      obst.forEach(o=>{ const nx=Math.max(A.x-A.w/2,Math.min(o.x,A.x+A.w/2)), ny=Math.max(A.y-A.h/2,Math.min(o.y,A.y+A.h/2)), dx=nx-o.x, dy=ny-o.y, d=Math.hypot(dx,dy);
+        if (d<o.r){ moved=true; const vx=A.x-o.x, vy=A.y-o.y, vl=Math.hypot(vx,vy)||1; A.x+=vx/vl*2; A.y+=vy/vl*2; } });
+      A.x=Math.max(A.w/2+4,Math.min(W-A.w/2-4,A.x)); A.y=Math.max(A.h/2+4,Math.min(Hh-PB+10-A.h/2,A.y));
+    }
+    if (!moved) break;
+  }
+  labs.forEach(A=>{ const far=Math.hypot(A.x-A.ax,A.y-A.ay)>A.w/2+A.h/2+(A.ideal?22:14);
+    if (far){ const nx=Math.max(A.x-A.w/2,Math.min(A.ax,A.x+A.w/2)), ny=Math.max(A.y-A.h/2,Math.min(A.ay,A.y+A.h/2)); g+='<line x1="'+A.ax.toFixed(1)+'" y1="'+A.ay.toFixed(1)+'" x2="'+nx.toFixed(1)+'" y2="'+ny.toFixed(1)+'" stroke="'+(A.ideal?"#e0a080":"#9db3dd")+'" stroke-width="1" stroke-dasharray="2 3"/>'; } });
+  // 品牌
+  let bt=""; R.F.forEach((f,i)=>{ const x=X(f[0]), y=Y(f[1]), r=rad[i], nm=R.names[i], tw=textW(nm,13);
+    g+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="none" stroke="#222" stroke-width="1.3"/>';
+    if (tw<=2*r-6) bt+='<text x="'+x.toFixed(1)+'" y="'+(y+4.5).toFixed(1)+'" font-size="13" fill="#111" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+esc(nm)+'</text>';
+    else bt+='<text x="'+x.toFixed(1)+'" y="'+(y+r+15).toFixed(1)+'" font-size="13" fill="#111" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+esc(nm)+'</text>';
+    if (R.share) bt+='<text x="'+x.toFixed(1)+'" y="'+(tw<=2*r-6?(y+19):(y+r+29)).toFixed(1)+'" font-size="10.5" fill="#555" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+pct1(R.share[i])+'</text>';
+  });
+  g+=arrows+bt;
+  // 理想點
+  const star=(x,y,ro,ri)=>{ let p=""; for (let t=0;t<10;t++){ const rr=t%2?ri:ro, an=-Math.PI/2+t*Math.PI/5; p+=(x+rr*Math.cos(an)).toFixed(1)+","+(y+rr*Math.sin(an)).toFixed(1)+" "; } return p; };
+  R.ideals.forEach(o=>{ const x=X(o.xy[0]), y=Y(o.xy[1]), main=o.main, col=main?"#c00000":"#c55a11";
+    g+='<polygon points="'+star(x,y,main?17:13,main?7.5:5.5)+'" fill="#fff" stroke="'+col+'" stroke-width="2"/>';
+  });
+  labs.forEach(A=>{ if (A.ideal){ g+='<text x="'+A.x.toFixed(1)+'" y="'+(A.y+4.5).toFixed(1)+'" font-size="12.5" font-weight="700" fill="'+A.col+'" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+esc(A.t)+'</text>'; return; } g+='<text x="'+A.x.toFixed(1)+'" y="'+(A.y-2).toFixed(1)+'" font-size="12.5" fill="#1f3c74" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+esc(A.t)+'</text><text x="'+A.x.toFixed(1)+'" y="'+(A.y+12).toFixed(1)+'" font-size="11" fill="#4f6aa0" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+pct(A.p)+'</text>'; });
+  // 圖例
+  const ly=Hh-38;
+  g+='<text x="'+(W/2)+'" y="'+ly+'" font-size="11.5" fill="#555" text-anchor="middle">'+(R.share?"○ 品牌：圓面積與最近一次消費比例成正比　":"○ 品牌　")+"→ 特質：箭頭粗細依偏好勾選率，特質名稱下方為偏好勾選率　☆ 理想點"+'</text>';
+  g+='<text x="'+(W/2)+'" y="'+(ly+17)+'" font-size="11.5" fill="#555" text-anchor="middle">特質箭頭的長度已等比例調整，以便與品牌位置對照；方向不受影響</text>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+Hh+'" viewBox="0 0 '+W+' '+Hh+'" font-family="\'Noto Sans TC\',\'PingFang TC\',\'Microsoft JhengHei\',sans-serif">'+defs+g+'</svg>';
+}
+function renderMap(){ $("map-out").innerHTML=mapSVG(); }
+function svgToPng(svg,cb){
+  const img=new Image(), m=/width="(\d+)" height="(\d+)"/.exec(svg), w=+m[1], h=+m[2], k=3;
+  img.onload=()=>{ const c=document.createElement("canvas"); c.width=w*k; c.height=h*k; const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height); c.toBlob(cb,"image/png"); };
+  img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
+$("btn-copy-map").addEventListener("click",()=>svgToPng(mapSVG(),async blob=>{ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]); toast("已複製圖1，可直接貼到 Word"); }catch(e){ toast("此瀏覽器無法複製圖片，請改用「下載 PNG」"); } }));
+$("btn-png-map").addEventListener("click",()=>svgToPng(mapSVG(),blob=>{ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="知覺定位圖.png"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }));
+
+/* ---------- 複製與下載 ---------- */
+async function copyHTML(full,name){
+  const box=document.createElement("div"); box.innerHTML=full; const text=box.innerText;
+  try{ await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([full],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]); toast("已複製"+name+"，可直接貼到 Word"); }
+  catch(e){ box.style.position="fixed"; box.style.left="-9999px"; document.body.appendChild(box); const rg=document.createRange(); rg.selectNodeContents(box); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); try{ document.execCommand("copy"); toast("已複製"+name); }catch(_){ toast("複製失敗，請手動選取"); } sel.removeAllRanges(); box.remove(); }
+}
+const P_STYLE="font-family:'Times New Roman','新細明體',serif;font-size:10pt;margin:2pt 0;";
+$("btn-copy-t1").addEventListener("click",()=>copyHTML('<p style="'+P_STYLE+'">表1　評分表</p>'+t1HTML(true)+'<p style="'+P_STYLE+'">'+esc(t1Note())+'</p>',"表1"));
+$("btn-copy-t2").addEventListener("click",()=>copyHTML('<p style="'+P_STYLE+'">表2　各市場區隔的偏好勾選率與變異數分析</p>'+t2HTML(true)+'<p style="'+P_STYLE+'">'+esc(t2Note())+'</p>',"表2"));
+$("btn-copy-t3").addEventListener("click",()=>copyHTML('<p style="'+P_STYLE+'">表3　品牌座標與理想點距離</p>'+t3HTML(true)+'<p style="'+P_STYLE+'">'+esc(t3Note())+'</p>',"表3"));
+$("btn-xlsx").addEventListener("click",()=>{
+  const R=S.R, wb=XLSX.utils.book_new(), r4=x=>Math.round(x*10000)/10000;
+  const t1=[["定位基礎",...R.names,"理想點（偏好）"]].concat(R.order.map(j=>[R.attrs[j],...R.X.map(r=>r4(r[j])),r4(R.P[j])]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(t1),"評分表");
+  const dc=[["定位基礎",...R.names]].concat(R.order.map(j=>[R.attrs[j],...R.D.map(r=>r4(r[j]))]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dc),"雙重中心化");
+  if (R.seg){ const sg=R.seg; XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["定位基礎","全體",...sg.labs,"F","df1","df2","p"]].concat(R.order.map(j=>{ const t=sg.tests[j]; return [R.attrs[j],r4(R.P[j]),...sg.rates.map(r=>r4(r[j])),t?r4(t.F):"",t?t.df1:"",t?t.df2:"",t?r4(t.p):""]; }))),"區隔偏好ANOVA"); }
+  const t3=[["品牌","最近一次消費比例","第一軸","第二軸",...R.ideals.map(o=>"與"+o.name+"理想點距離")]].concat(R.bc.map((_,i)=>[R.names[i],R.share?r4(R.share[i]):"",r4(R.F[i][0]*100),r4(R.F[i][1]*100),...R.dist[i].map(d=>r4(d*100))])).concat(R.ideals.map(o=>[o.name+"理想點","",r4(o.xy[0]*100),r4(o.xy[1]*100)]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(t3),"品牌座標");
+  const ld=[["定位基礎","第一軸負荷量","第二軸負荷量","二維解釋比例"]].concat(R.order.map(j=>[R.attrs[j],r4(R.V[j][0]),r4(R.V[j][1]),r4(R.fit[j])]));
+  ld.push([]); ld.push(["解釋變異量",r4(R.ve[0]),r4(R.ve[1])]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ld),"特質負荷量");
+  XLSX.writeFile(wb,"知覺定位分析_"+(S.file.replace(/\.[^.]+$/,"")||"結果")+".xlsx");
+});
+
+/* ---------- AI 報告指令 ---------- */
+function promptText(){
+  const R=S.R; if (!R) return "";
+  const tg=$("in-target").value.trim()||"本產品";
+  const focal=$("sel-focal").value, fi=focal?R.bc.indexOf(focal):-1;
+  const sg=R.seg, L=[];
+  L.push("請依下列資料，以繁體中文撰寫行銷研究報告中「知覺定位分析」一節。");
+  L.push("");
+  L.push("【寫作規範】");
+  L.push("1. 採嚴謹的學術書面語，以論述性段落撰寫；用「變數」，不用「變項」。");
+  L.push("2. 本節依序包含：開頭段落、（一）評分表分析、"+(sg?"（二）市場區隔的偏好差異、（三）知覺圖分析、（四）品牌定位策略":"（二）知覺圖分析、（三）品牌定位策略")+"。各小節標題照抄，不另加編號。");
+  L.push("3. 表格與圖片只寫插入位置標記，獨立成行：〔插入表1〕"+(sg?"、〔插入表2〕":"")+"、〔插入圖1〕、〔插入表"+(sg?3:2)+"〕。標記前一段須先在文中引述（例如「如表1所示」）。圖1 的圖稱寫在〔插入圖1〕的下一行：「圖1　"+tg+"品牌知覺定位圖」。");
+  L.push("4. 正文不重複表格中的數值細節，只引述關鍵數字（例如勾選率、距離）以支持論點。");
+  L.push("5. 座標軸沒有名稱，不要替第一軸、第二軸命名；以特質箭頭的方向說明品牌位置。");
+  L.push("6. 方法說明以開頭段落的固定文字為準，其他段落不再說明運算細節。");
+  L.push("");
+  L.push("【各段寫法】");
+  L.push("開頭段落：照抄下列文字，不要改寫：");
+  L.push("「本研究以受訪者對各品牌的特質勾選率建立評分表，並以偏好題的勾選率代表理想點。為排除品牌規模與特質普及程度的影響，評分表先經雙重中心化（Barwise & Ehrenberg, 1985; Romaniuk & Sharp, 2000），再以主成分分析萃取前兩個主成分繪製知覺定位圖；理想點則以補充點的方式投影至同一平面（Greenacre, 2007）。」");
+  L.push("（一）評分表分析：引述表1。先說明理想點勾選率最高的幾項特質，代表"+tg+"消費者重視的定位基礎；再逐項說明這些重要特質由哪些品牌表現最好（以表中粗斜體為依據，粗斜體代表排除品牌規模與特質普及程度後仍明顯較高）。若某項特質偏好勾選率高、但各品牌的勾選率相近，指出它是同質點（POP），不足以區分品牌。");
+  if (sg) L.push("（二）市場區隔的偏好差異：引述表2，第一句寫「本研究令顯著水準 α = "+fa(sg.alpha)+"」。說明多少項特質達顯著、哪些區隔在哪些特質上較高或較低（依 ▲▽），並依結果說明"+(R.useSeg?"各區隔偏好不同，因此知覺圖分別畫出各區隔的理想點":"各區隔的偏好大致相同，因此知覺圖只畫全體的理想點")+"。區隔名稱照抄。");
+  L.push((sg?"（三）":"（二）")+"知覺圖分析：引述圖1 與表"+(sg?3:2)+"。說明讀圖方式（品牌愈靠近某特質箭頭的方向，愈具有該特質；箭頭愈粗，偏好勾選率愈高；"+(R.share?"圓面積代表最近一次消費比例；":"")+"品牌與理想點的距離愈近，愈符合消費者的偏好）。接著說明品牌的競爭結構：哪些品牌位置相近而直接競爭、哪些品牌占有獨特位置，以及各品牌與理想點的距離。"+(R.share?"並比較品牌位置與消費比例：靠近理想點卻消費比例偏低，或定位鮮明卻遠離理想點的品牌。":""));
+  L.push((sg?"（四）":"（三）")+"品牌定位策略："+(fi>=0?"只針對本研究品牌「"+R.names[fi]+"」撰寫，以「"+R.names[fi]+"：〔策略主軸〕」為小標，說明其差異化點（POD）、與理想點的距離與移動方向，以及需要補強的同質點（POP）與具體行銷作法。":"依品牌逐一撰寫，每個品牌以「品牌名稱：〔策略主軸〕」為小標，各寫一段：說明其差異化點（POD）、與理想點的距離與應移動的方向，以及需要補強的同質點（POP）與具體行銷作法。")+"策略須以表1、圖1 的結果為依據，不要加入資料沒有支持的品牌特徵。");
+  L.push("");
+  L.push("【資料】");
+  L.push("研究標的："+tg+"；有效樣本 n = "+R.N+"；品牌："+R.names.join("、")+"。");
+  L.push("");
+  L.push("表1　評分表（勾選率；粗斜體以【】標示；依理想點勾選率由高到低）");
+  L.push(["定位基礎",...R.names,"理想點"].join("｜"));
+  R.order.forEach(j=>L.push([R.attrs[j],...R.X.map((r,i)=>{ const v=dec2(r[j]); return R.D[i][j]>=R.thr?"【"+v+"】":v; }),dec2(R.P[j])].join("｜")));
+  L.push(t1Note());
+  if (sg){
+    L.push("");
+    L.push("表2　各市場區隔的偏好勾選率與變異數分析");
+    L.push(["定位基礎","全體",...sg.labs.map((l,g)=>l+"（n = "+sg.n[g]+"）"),"F","p"].join("｜"));
+    R.order.forEach(j=>{ const t=sg.tests[j], sig=t&&t.p<sg.alpha, mx=Math.max(...sg.rates.map(r=>r[j])), mn=Math.min(...sg.rates.map(r=>r[j]));
+      L.push([R.attrs[j],pct(R.P[j]),...sg.rates.map(r=>pct(r[j])+(sig&&r[j]===mx?" ▲":sig&&r[j]===mn?" ▽":"")),t?f2(t.F):"—",t?fp(t.p)+(sig?"（顯著）":""):"—"].join("｜")); });
+    L.push("達顯著的特質："+sg.nsig+" / "+R.attrs.length+" 項。知覺圖："+(R.useSeg?"畫各區隔的理想點":"只畫全體的理想點")+"。");
+  }
+  L.push("");
+  L.push("知覺圖（圖1）資訊：前兩個主成分的解釋變異量分別為 "+pct1(R.ve[0])+" 與 "+pct1(R.ve[1])+"，合計 "+pct1(R.ve[0]+R.ve[1])+"。");
+  L.push("特質方向（負荷量：第一軸, 第二軸；二維解釋比例）：");
+  L.push(R.order.map(j=>R.attrs[j]+"（"+dec2(R.V[j][0])+", "+dec2(R.V[j][1])+"；"+pct(R.fit[j])+"）").join("、"));
+  L.push("");
+  L.push("表"+(sg?3:2)+"　品牌座標與理想點距離（百分點；依與全體理想點距離由近到遠）");
+  L.push(["品牌",...(R.share?["最近一次消費比例"]:[]),"第一軸","第二軸",...R.ideals.map(o=>"與"+o.name+"理想點距離")].join("｜"));
+  t3Rows().forEach(i=>L.push([R.names[i],...(R.share?[pct1(R.share[i])]:[]),f1(R.F[i][0]*100),f1(R.F[i][1]*100),...R.dist[i].map(d=>f1(d*100))].join("｜")));
+  R.ideals.forEach(o=>L.push(o.name+"理想點｜"+(R.share?"｜":"")+f1(o.xy[0]*100)+"｜"+f1(o.xy[1]*100)));
+  if (R.share) L.push("最近一次消費「以上皆非」占 "+pct1(R.shareOther)+"。");
+  L.push("");
+  L.push("參考文獻（文末列出實際引用者，APA 第 7 版）：");
+  L.push("Barwise, T. P., & Ehrenberg, A. S. C. (1985). Consumer beliefs and brand usage. Journal of the Market Research Society, 27(2), 81–93.");
+  L.push("Greenacre, M. (2007). Correspondence analysis in practice (2nd ed.). Chapman & Hall/CRC.");
+  L.push("Romaniuk, J., & Sharp, B. (2000). Using known patterns in image data to determine brand positioning. International Journal of Market Research, 42(2), 219–230.");
+  return L.join("\n");
+}
+function renderPrompt(){ const t=promptText(); $("prompt-out").textContent=t; $("prompt-len").textContent=t?"約 "+t.length+" 字":""; }
+$("btn-copy-prompt").addEventListener("click",async()=>{ const t=promptText(); try{ await navigator.clipboard.writeText(t); toast("已複製知覺定位分析報告指令"); }catch(e){ toast("複製失敗，請展開指令內容手動複製"); } });
+
+/* ---------- 上傳 ---------- */
+const dz=$("dropzone");
+$("file").addEventListener("change",e=>{ const f=e.target.files[0]; if (f){ $("dz-label").textContent=f.name; readFile(f); } });
+["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.add("drag"); }));
+["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.remove("drag"); }));
+dz.addEventListener("drop",e=>{ const f=e.dataTransfer.files[0]; if (f){ $("dz-label").textContent=f.name; readFile(f); } });
+</script>
+</body>
+</html>
