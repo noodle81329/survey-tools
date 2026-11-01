@@ -356,6 +356,12 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
     <h3 class="kit-h">報告用圖表</h3>
     <p class="hint">以下圖表由本工具依分析結果產生，格式與數值不經 AI；欄名採用步驟 3 的區隔名稱，表2、表3 依步驟 4、5 的輪廓分析結果與顯著水準即時更新。表格按「複製」後可直接貼到 Word；若需要圖形，可使用最下方的 AI 繪圖指令。</p>
     <div id="kit"></div>
+    <div class="savebox" id="pos-box">
+      <h3>知覺定位問卷資料</h3>
+      <p class="hint">下一步若要製作品牌定位問卷，請選擇目標區隔後複製資料，貼到<a href="../positioning-survey/">知覺定位問卷產生器</a>的「一鍵帶入」欄。資料包含競爭品牌、因素分析結果、目標區隔的輪廓特徵（▲）與各區隔描述，產生器會自動填入對應欄位。</p>
+      <div class="row"><label class="inline">目標區隔 <select id="pos-target"></select></label><button type="button" class="primary" id="btn-copy-pos">複製知覺定位問卷資料</button></div>
+      <details><summary>檢視資料內容</summary><pre class="prompt" id="pos-out"></pre></details>
+    </div>
   </section>
 
   <div hidden><pre id="prompt-shot"></pre><button id="btn-copy-shot"></button></div>
@@ -1834,6 +1840,66 @@ function readScreen(wb){
 }
 
 /* ---------- AI 指令：市場區隔分析報告（修正版） ---------- */
+
+/* ---------- 知覺定位問卷資料（貼到知覺定位問卷產生器） ---------- */
+function brandGroup(){
+  /* 與品牌有關的複選或是非題組：題組名稱或題目含「品牌」「喝過」「買過」「購買過」「使用過」 */
+  const byPf=new Map();
+  S.profCols.forEach(pc=>{ if (!pc.prefix) return; if (!(pc.type==="bin"||pc.type==="cat")) return; if (!byPf.has(pc.prefix)) byPf.set(pc.prefix,[]); byPf.get(pc.prefix).push(pc); });
+  const RE=/品牌|喝過|買過|購買過|使用過/;
+  for (const [pf,L] of byPf){
+    if (L.length<2) continue;
+    const name=S.groupNames[pf]||"", stem=L.map(pc=>pc.stem||"").join(" ");
+    if (!RE.test(name)&&!RE.test(stem)) continue;
+    const yes=v=>{ const t=String(v==null?"":v).trim(); return t==="1"||/^(是|有|yes)$/i.test(t); };
+    const rate=pc=>{ let f=0,n=0; S.rows.forEach(r=>{ const v=r[pc.ci]; if (v===""||v==null) return; n++; if (yes(v)) f++; }); return n?f/n:0; };
+    return {pf,name:name||"品牌",list:L.map(pc=>({pc,name:optLabel(pc),rate:rate(pc)})).sort((a,b)=>b.rate-a.rate)};
+  }
+  return null;
+}
+function posText(){
+  const c=curRun(), P=S.prof&&S.prof.K===c.k?S.prof:null; if (!c) return "";
+  const K=c.k, k=S.nf, fl=Array.from({length:k},(_,j)=>flabel(j)), FI=faInfo(), r=S.res, ord=["一","二","三","四","五","六","七","八","九","十"];
+  const tg=+($("pos-target").value||0), nm=g=>slabel(g), pc=g=>Math.round(c.N[g]/S.seg.n*100)+"%";
+  const stem=it=>String(it.c.stem||"").replace(/^\s*\d+\s*[.．、]\s*/,"");
+  const L=["【知覺定位問卷資料】（由市場區隔分析工具產生，請貼到知覺定位問卷產生器的「一鍵帶入」欄）"];
+  const topic=$("topic").value.trim(); L.push("■研究標的"); L.push(topic&&topic.length<=20&&!/\n/.test(topic)?topic:"（請自行填寫）");
+  const bg=brandGroup();
+  L.push("■競爭品牌"); L.push(bg?bg.list.map(b=>b.name).join("、"):"（輪廓變數中找不到品牌題組，請自行填寫）");
+  L.push("■因素分析結果");
+  FI.F.forEach((f,j)=>{
+    L.push("因素"+(ord[j]||(j+1))+"："+fl[j]);
+    L.push("主導變數："+(f.items.length?f.items.slice().sort((a,b)=>b.row[j]-a.row[j]).map(it=>stem(it)+"（"+f3(it.row[j])+"）"+(it.cross&&it.cross.length?"〔交叉負荷："+it.cross.map(q=>fl[q]+" "+f3(it.row[q])).join("、")+"〕":"")).join("；"):"無"));
+  });
+  if (S.exHist&&S.exHist.length) L.push("自因素分析剔除的題項（請勿作為品牌聯想選項）："+S.exHist.map(x=>(String(x.stem||x.name).replace(/^\s*\d+\s*[.．、]\s*/,""))+"（"+x.reason+"）").join("；"));
+  L.push("■區隔剖析結果（卡方檢定）");
+  L.push("目標區隔："+nm(tg)+"（"+pc(tg)+"）");
+  if (P){
+    const lines=[];
+    P.list.filter(x=>x.sig&&x.type!=="num").forEach(x=>{
+      const t=x.test, st="χ²("+t.df+") = "+t.chi.toFixed(2)+"，"+pTxt(t.p);
+      if (x.type==="bin"){ const row=x.rows[0]; if (row.mark[tg]>0) lines.push((S.groupNames[x.pc.prefix]||"複選題")+"："+optLabel(x.pc)+"（"+st+"，提升指數 "+Math.round(row.idx[tg])+"）"); }
+      else x.rows.forEach(row=>{ if (row.mark[tg]>0) lines.push(profLabel(x.pc)+"："+catLabel(row.level)+"（"+st+"，提升指數 "+Math.round(row.idx[tg])+"）"); });
+    });
+    L.push(lines.length?lines.join("\n"):"輪廓分析未發現目標區隔相對集中的使用情境、通路或品牌。");
+    L.push("（以上為目標區隔相對集中〔提升指數 ≥ "+IDX_HI+"，整體檢定 α = "+fp(P.a)+"〕的輪廓特徵）");
+  } else L.push("（尚未完成輪廓分析）");
+  L.push("■市場區隔描述");
+  const T3=P?kitT3Rows():[], feats=clusterFeats(c.C,fl);
+  c.N.forEach((_,g)=>{
+    const prof=T3.filter(rw=>!["人數","百分比","消費動機",T3_LOW].includes(rw[0])).map(rw=>rw[1][g]!=="—"?rw[0]+"："+rw[1][g]:"").filter(Boolean);
+    const mot=T3.find(rw=>rw[0]==="消費動機");
+    L.push("集群"+(g+1)+" "+nm(g)+"（"+pc(g)+"）："+(feats[g].type==="正向"?"群中心值最高的構面為 "+feats[g].basis:"各構面皆未高於其他群，群中心值最低的構面為 "+feats[g].basis.replace("，最大負值","")+"（從反面命名，代表明顯不是因為此動機而消費）")+(mot&&mot[1][g]!=="—"?"；主要題項："+mot[1][g]:"")+(prof.length?"；輪廓分析相對集中的特徵："+prof.join("；"):""));
+  });
+  return L.join("\n");
+}
+function renderPos(){
+  const c=curRun(); if (!c||!$("pos-target")) return;
+  const sel=$("pos-target"), cur=sel.value;
+  sel.innerHTML=c.N.map((x,g)=>'<option value="'+g+'">'+esc(slabel(g))+'（'+Math.round(x/S.seg.n*100)+'%）</option>').join("");
+  if (cur!==""&&+cur<c.k) sel.value=cur;
+  $("pos-out").textContent=posText();
+}
 function renderSegPrompt(){
   renderKPrompt(); if (S.seg&&curRun()){ renderCaPrompt(); renderCaTable(); }
   if (!S.seg||!curRun()) return;
@@ -1916,6 +1982,7 @@ function renderSegPrompt(){
   if (P){ L.push("區隔輪廓整理（表3）："); kitT3Rows().forEach(rw=>L.push(rw[0]+"｜"+rw[1].join("｜"))); }
   const text=L.join("\n");
   $("seg-prompt").textContent=text;
+  try{ renderPos(); }catch(e){ console.error(e); }
   $("seg-prompt-len").textContent=(allNamed?"":"區隔尚未全部命名・")+"共 "+text.length.toLocaleString()+" 字";
   $("sec-seg-prompt").hidden=false;
   renderKit();
@@ -2062,6 +2129,8 @@ $("only-sig").addEventListener("change",()=>{ if (S.seg) renderProfile(true); })
 $("topic").addEventListener("input",()=>{ if (S.seg) renderSegPrompt(); });
 $("focal-brand").addEventListener("input",()=>{ if (S.seg) renderSegPrompt(); });
 $("btn-copy-seg").addEventListener("click",()=>copyText($("seg-prompt").textContent,"已複製市場區隔分析報告指令"));
+$("pos-target").addEventListener("change",()=>{ $("pos-out").textContent=posText(); });
+$("btn-copy-pos").addEventListener("click",()=>copyText(posText(),"已複製知覺定位問卷資料"));
 $("btn-copy-fa").addEventListener("click",copyFaTable);
 $("btn-copy-ca").addEventListener("click",()=>copyText($("ca-prompt").textContent,"已複製集群分析報告指令"));
 $("btn-copy-ca-table").addEventListener("click",copyCaTable);

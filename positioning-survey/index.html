@@ -93,6 +93,16 @@ footer{max-width:1280px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);f
   </div>
 
   <div class="group">
+    <p class="group-title">一鍵帶入市場區隔分析的資料</p>
+    <div class="field">
+      <label for="import">貼上「知覺定位問卷資料」<span class="opt">建議使用</span></label>
+      <textarea id="import" placeholder="在市場區隔分析工具的步驟 7 選擇目標區隔，按「複製知覺定位問卷資料」，貼在這裡後按「帶入」。"></textarea>
+      <div class="toolbar"><button type="button" id="btnImport">帶入</button><span class="note" id="n-import"></span></div>
+      <p class="help">會自動填入研究標的、競爭品牌、因素分析結果、區隔剖析結果與市場區隔描述；帶入後仍可在下方逐欄檢查與修改。沒有使用<a href="../segment/">市場區隔分析工具</a>時，請直接填寫下方各欄。</p>
+    </div>
+  </div>
+
+  <div class="group">
     <p class="group-title">研究標的</p>
     <div class="field">
       <label for="target">研究標的<span class="req">必填</span></label>
@@ -465,8 +475,23 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 F.forEach(k => el[k].addEventListener("input", build));
 el.outMode.addEventListener("change", build);
 
+$("btnImport").addEventListener("click", () => {
+  const t = $("import").value;
+  if (!/■競爭品牌|■因素分析結果/.test(t)){ toast("找不到市場區隔分析工具的資料標記，請確認貼上的內容"); return; }
+  const sec = {};
+  t.split(/\n(?=■)/).forEach(b => { const m = /^■([^\n]+)\n?([\s\S]*)$/.exec(b.trim()); if (m) sec[m[1].trim()] = m[2].trim(); });
+  const put = (k, v) => { if (v && !/^（請自行填寫|^（輪廓變數中找不到/.test(v)) el[k].value = v; };
+  put("target", sec["研究標的"]);
+  put("brands", sec["競爭品牌"]);
+  put("factors", sec["因素分析結果"]);
+  put("chisq", sec["區隔剖析結果（卡方檢定）"]);
+  put("segs", sec["市場區隔描述"]);
+  const n = ["研究標的","競爭品牌","因素分析結果","區隔剖析結果（卡方檢定）","市場區隔描述"].filter(k => sec[k] && !/^（請自行填寫|^（輪廓變數中找不到/.test(sec[k])).length;
+  $("n-import").textContent = "已帶入 " + n + " 個欄位" + (el.target.value ? "" : "；研究標的請自行填寫") + "。";
+  build(); toast("已帶入市場區隔分析的資料");
+});
 $("btnClear").addEventListener("click", () => {
-  F.forEach(k => { if (el[k].tagName!=="SELECT") el[k].value=""; });
+  F.forEach(k => { if (el[k].tagName!=="SELECT") el[k].value=""; }); $("import").value=""; $("n-import").textContent="";
   el.outMode.value="word"; build(); toast("已清除");
 });
 $("btnCopy").addEventListener("click", async () => {
