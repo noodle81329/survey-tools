@@ -1643,11 +1643,12 @@ function catLabel(t){ return String(t).replace(/^\s*\d+\s*[.．、)）]\s*/,"")|
 function kitSig(){ const P=S.prof; return P?P.list.filter(x=>x.sig&&(x.type==="cat"||x.type==="bin")):[]; }
 function kitShare(){ const G=S.seg, c=curRun(); return c.N.map(x=>x/G.n); }
 /* 表2 輪廓分析表 */
+function kitNumSig(){ const P=S.prof; return P?P.list.filter(x=>x.type==="num"&&x.sig):[]; }
 function kitT2HTML(word){
-  const c=curRun(), K=c.k, L=kitSig(), P=S.prof;
+  const c=curRun(), K=c.k, L=kitSig(), P=S.prof, NL=kitNumSig();
   const td=(t,al,extra)=>word?'<td'+(extra||"")+' style="'+W_STYLE('text-align:'+(al||"center")+';')+'">'+t+'</td>':'<td'+(extra||"")+' class="'+(al==="left"?"l":"c")+'">'+t+'</td>';
   const th=t=>word?'<th style="'+W_STYLE('text-align:center;font-weight:normal;')+'">'+t+'</th>':'<th>'+t+'</th>';
-  let h='<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("輪廓變數")+th("類別")+c.N.map((_,g)=>th((g+1)+". "+esc(slabel(g)))).join("")+th("χ²")+th("<i>p</i>")+'</tr></thead><tbody>';
+  let h='<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("輪廓變數")+th("類別")+c.N.map((_,g)=>th((g+1)+". "+esc(slabel(g)))).join("")+th(NL.length?"χ²／<i>F</i>":"χ²")+th("<i>p</i>")+'</tr></thead><tbody>';
   const groups=[]; L.forEach(x=>{ if (x.type==="bin"){ const key="bin:"+(x.pc.prefix||"__"); let gp=groups.find(z=>z.key===key); if (!gp){ gp={key,title:x.pc.prefix&&S.groupNames[x.pc.prefix]?S.groupNames[x.pc.prefix]:(x.pc.prefix?"代碼 "+x.pc.prefix:"複選題"),rows:[],bin:true}; groups.push(gp); } gp.rows.push({label:optLabel(x.pc),row:x.rows[0],t:x.test}); }
     else groups.push({key:"cat:"+x.pc.ci,title:profLabel(x.pc),rows:x.rows.map(r=>({label:catLabel(r.level),row:r})),t:x.test}); });
   groups.forEach(gp=>{
@@ -1663,10 +1664,16 @@ function kitT2HTML(word){
       h+='</tr>';
     });
   });
-  h+='<tr>'+td("全體（各區隔比例）","center",' colspan="2"')+kitShare().map(v=>td(Math.round(v*100)+"%")).join("")+td("")+td("")+'</tr></tbody></table>';
-  return h;
+  h+='<tr>'+td("全體（各區隔比例）","center",' colspan="2"')+kitShare().map(v=>td(Math.round(v*100)+"%")).join("")+td("")+td("")+'</tr>';
+  /* 變異數分析達顯著的量化輪廓變數：各區隔原始平均數，平均數最高（標準化平均數 > 0）者以粗體底線標示 */
+  NL.forEach((x,i)=>{
+    const t=x.test, top=typeof topG==="function"?topG(x):-1;
+    const nm=isIndex(x.pc)?x.pc.name+"<br>（構念指標）":(String(x.pc.name).replace(/^[A-Za-z]+\d+\s*/,"")||x.pc.name)+"<br>（額外動機）";
+    h+='<tr>'+td(nm)+td("平均數","left")+x.means.map((v,g)=>{ const s=v==null?"—":v.toFixed(2); return td(g===top?"<b><u>"+s+"</u></b>":s); }).join("")+td(t?"<i>F</i> = "+t.F.toFixed(2)+"<br>("+t.df1+", "+t.df2+")":"—")+td(t?pTxtShort(t.p):"—")+'</tr>';
+  });
+  return h+'</tbody></table>';
 }
-const KIT_T2_CAP="表2　市場區隔之輪廓分析", KIT_T2_NOTE=()=>"註：僅列出與市場區隔之關聯達顯著水準（α = "+fp(alpha())+"）的輪廓變數。方格內是以輪廓變數類別為條件的區隔比例。提升指數（該區隔佔特定輪廓組別的比例 ÷ 該區隔佔全體的比例 × 100）≥ "+IDX_HI+" 者標示 ▲ 並以粗體底線呈現，表示該輪廓組別的受訪者相對集中於該區隔；≤ "+IDX_LO+" 者標示 ▼，表示相對較少。"+IDX_HI+" 與 "+IDX_LO+" 為市場調查業界常用的描述性門檻，▲／▼ 不代表個別方格達統計顯著；χ² 下方括號內為自由度，複選題每個選項各自檢定。";
+const KIT_T2_CAP="表2　市場區隔之輪廓分析", KIT_T2_NOTE=()=>"註：僅列出與市場區隔之關聯達顯著水準（α = "+fp(alpha())+"）的輪廓變數。方格內是以輪廓變數類別為條件的區隔比例。提升指數（該區隔佔特定輪廓組別的比例 ÷ 該區隔佔全體的比例 × 100）≥ "+IDX_HI+" 者標示 ▲ 並以粗體底線呈現，表示該輪廓組別的受訪者相對集中於該區隔；≤ "+IDX_LO+" 者標示 ▼，表示相對較少。"+IDX_HI+" 與 "+IDX_LO+" 為市場調查業界常用的描述性門檻，▲／▼ 不代表個別方格達統計顯著；χ² 下方括號內為自由度，複選題每個選項各自檢定。"+(kitNumSig().length?"表末列出變異數分析達顯著的量化輪廓變數之各區隔平均數，平均數最高的區隔以粗體底線標示；F 下方括號內為自由度。":"");
 /* 表3 區隔輪廓整理 */
 /* 量化輪廓變數（變異數分析達顯著）歸入標準化平均數最高且大於 0 的區隔 */
 function topG(x){ let g=-1; x.zmeans.forEach((v,i)=>{ if (v!=null&&v>0&&(g<0||v>x.zmeans[g])) g=i; }); return g; }
@@ -1746,7 +1753,7 @@ function renderKit(){
   let h='';
   if (un.length) h+='<div class="notice warn">'+un.map(g=>"集群"+(g+1)).join("、")+'尚未命名；請在步驟 8 填入區隔名稱，圖表的欄名會自動更新。</div>';
   h+='<h3>'+KIT_T2_CAP+'</h3>';
-  if (L.length){ h+='<div class="table-scroll">'+kitT2HTML(false)+'</div><p class="hint small">'+KIT_T2_NOTE()+'</p><div class="row"><button type="button" data-kit="t2">複製表2</button></div>'; }
+  if (L.length||kitNumSig().length){ h+='<div class="table-scroll">'+kitT2HTML(false)+'</div><p class="hint small">'+KIT_T2_NOTE()+'</p><div class="row"><button type="button" data-kit="t2">複製表2</button></div>'; }
   else h+='<div class="notice warn">步驟 9 沒有與市場區隔關聯達顯著的質性輪廓變數，因此不產生表2。</div>';
   h+='<h3>'+KIT_T3_CAP+'</h3><div class="table-scroll">'+kitT3HTML(false)+'</div><p class="hint small">消費動機為各群命名因素負荷量最高的前 2 題（從反面命名者標示「不重視」）；額外動機為變異數分析達顯著的剔除題項，列在標準化平均數最高（且大於 0）的區隔；其餘各列為該群標示 ▲（提升指數 ≥ '+IDX_HI+'）的類別；最後一列「低集中輪廓」不分輪廓變數，列出該群標示 ▼（提升指數 ≤ '+IDX_LO+'）的類別；「—」表示沒有符合的類別。</p><div class="row"><button type="button" data-kit="t3">複製表3</button></div>';
   const p2=drawPrompt2();
@@ -1800,9 +1807,9 @@ function renderSegPrompt(){
   L.push("第二節　輪廓分析");
   L.push("1. 先以一段文字說明輪廓分析的目的：市場區隔依消費動機建立，但動機無法直接觀察；輪廓分析比較各區隔在人口統計、行為與生活型態等輪廓變數上的差異，使各區隔可被辨識與觸及。質性輪廓變數以卡方獨立性檢定檢驗其與市場區隔的關聯，方格內為以輪廓變數類別為條件的區隔百分比，與全體區隔比例比較；整體檢定達顯著時，再以提升指數（lift index）判斷各方格：提升指數為該區隔佔特定輪廓組別的比例 ÷ 該區隔佔全體的比例 × 100，亦等於該方格的觀察次數 ÷ 期望次數 × 100；指數 ≥ "+IDX_HI+" 標示 ▲，表示該輪廓組別的受訪者相對集中於該區隔，≤ "+IDX_LO+" 標示 ▼，表示相對較少。並說明 "+IDX_HI+" 與 "+IDX_LO+" 為市場調查業界常用的描述性門檻，▲／▼ 為描述性篩選標記，不代表個別方格達統計顯著。自因素分析剔除的動機題項則作為輪廓變數，以單因子變異數分析比較各區隔的平均數。");
   if (loose) L.push("   這段文字最後加一句「本研究令顯著水準 α = "+AT+"。」，不說明理由。");
-  L.push("2. 接著以一句話交代共同資訊，之後不再重複："+(loose?"「以下輪廓變數皆在 α = "+AT+" 下達顯著，卡方值與 p 值列於表2"+(weak?"；p 值介於 .10 與 "+AT+" 之間者以「†」標示，屬較弱的線索":"")+"。」":"「以下輪廓變數皆達顯著，卡方值與 p 值列於表2。」")+"卡方檢定的結果內文一律不寫 χ² 值與 p 值，也不再寫「達顯著」「如表2所示」"+(weak?"「屬較弱的線索」；較弱的線索只在變數名稱後加「†」":"")+"。");
+  L.push("2. 接著以一句話交代共同資訊，之後不再重複："+(loose?"「以下輪廓變數皆在 α = "+AT+" 下達顯著，用以描述"+K+"個市場區隔的特色，卡方值"+(P&&P.list.some(x=>x.type==="num"&&x.sig)?"、F 值":"")+"與 p 值列於表2"+(weak?"；p 值介於 .10 與 "+AT+" 之間者以「†」標示，屬較弱的線索":"")+"。」":"「以下輪廓變數皆達顯著，用以描述"+K+"個市場區隔的特色，卡方值"+(P&&P.list.some(x=>x.type==="num"&&x.sig)?"、F 值":"")+"與 p 值列於表2。」")+"內文一律不寫 χ² 值、F 值、η² 與 p 值，也不再寫「達顯著」「如表2所示」"+(weak?"「屬較弱的線索」；較弱的線索只在變數名稱後加「†」":"")+"。");
   L.push("3. 依構面分組，每個構面一段（例如消費行為、人口統計、生活型態與媒體使用；依變數內容判斷）。每段以區隔為主詞：同一區隔在該構面標示 ▲ 的特徵寫成一句，每個區隔只寫一次「集中於」，各區隔之間以分號串接；第一次提及區隔寫「名稱（群N）」，之後只寫名稱。同一類別集中於多個區隔時改用對比或合併寫法，不逐群重複，例如「日常作息群偏向生理男性，其餘三群則偏向生理女性」「參加聚會見於低口感風味群以外的三群」。順序類別的輪廓變數（例如飲用頻率、年齡層）不逐一列舉類別，以層級概括並由高到低排列，例如「日常作息群以高頻率飲用者為主，口感風味群為中頻率，展現與養生群與低口感風味群則分別為中低與低頻率」。複選題選項寫成自然語句，例如「曾喝過原萃者」「在自動販賣機購買者」「FB 使用者」，不寫「曾喝過品牌：」等題組前綴，並刪除選項前的編號（例如「1原萃」寫為「原萃」）。只採用標示 ▲ 者，不得把 ▲ 寫成「顯著較高」；整體檢定達顯著、但沒有任何類別標示 ▲ 的變數不予說明。內文不說明各類別人數多寡。");
-  L.push("4. 若有達顯著的量化輪廓變數（變異數分析），因表2未列出，於內文括號內寫出 F 值、p 值與 η²"+(weak?"（較弱的線索在變數名稱後加「†」）":"")+"；只寫平均數最高的區隔，以及是否列為該群特徵，不逐一列出事後比較的配對：標準化平均數最高（且大於 0）的區隔，剔除題項列為該區隔的額外動機，CFA 指標列為該區隔的構念特徵，與表3一致。第一次提到 CFA 指標時，依【分析結果】列出的題項，以一句話說明該構念的意涵（例如「相依我反映以人際關係與群體歸屬界定自我的傾向」），不要只寫構念名稱。");
+  L.push("4. 若有達顯著的量化輪廓變數（變異數分析），併入相關構面的段落或另起一句，只寫平均數最高的區隔，例如「日常作息群在促進消化（項目14）上的平均數最高」「日常作息群在相依我上的平均數最高」；不寫 F 值、p 值與 η²，不寫「列為該群特徵」「列為構念特徵」，也不列出事後比較的配對。第一次提到 CFA 指標時，依【分析結果】列出的題項，以一句話說明該構念的意涵（例如「相依我反映以人際關係與群體歸屬界定自我的傾向」），不要只寫構念名稱。");
   L.push("5. 段落最後以一句話帶過：「其餘輪廓變數與市場區隔未有明顯關聯，表2僅列出達顯著者。」");
   L.push("");
   L.push("第三節　區隔輪廓整合與行銷策略");
