@@ -202,10 +202,10 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
 
   <!-- 5 AI 報告指令 -->
   <section class="panel" id="sec-prompt" aria-labelledby="h5s" hidden>
-    <h2 id="h5s"><span class="step">5</span>AI 報告指令：樣本結構</h2>
-    <p class="hint">指令已自動填入樣本概況、表1 的次數分配與描述統計。複製後貼到 AI 對話中，AI 會撰寫研究報告的「樣本結構」一節：先說明資料蒐集與回收情形，再依構面描述樣本的主要特徵。</p>
+    <h2 id="h5s"><span class="step">5</span>AI 報告指令：樣本結構分析</h2>
+    <p class="hint">指令已自動填入樣本概況、表1 的次數分配與描述統計。複製後貼到 AI 對話中，AI 會撰寫研究報告的「樣本結構分析」一節：先說明資料蒐集與回收情形，再依構面描述樣本的主要特徵。</p>
     <div class="row">
-      <button type="button" class="primary" id="btn-copy-prompt">複製樣本結構報告指令</button>
+      <button type="button" class="primary" id="btn-copy-prompt">複製樣本結構分析報告指令</button>
       <span class="hint small" id="prompt-len" style="margin:0"></span>
     </div>
     <details><summary>檢視指令內容</summary><pre class="prompt" id="prompt-out"></pre></details>
@@ -437,7 +437,7 @@ function renderAll(){
 /* ---------- AI 報告指令 ---------- */
 function promptText(){
   const M=tableModel(), sim=!!S.summ["模擬資料筆數"];
-  const L=["請根據下方【分析結果】，撰寫正式研究報告中的「樣本結構」一節，說明資料蒐集與回收情形，並描述有效樣本的主要特徵。",""];
+  const L=["請根據下方【分析結果】，撰寫正式研究報告中的「樣本結構分析」一節，說明資料蒐集與回收情形，並描述有效樣本的主要特徵。",""];
   L.push("一、寫作內容（依序撰寫）");
   L.push("1. 第一段　資料蒐集與回收：以【分析結果】的「樣本概況」為基礎改寫為正式文字，發放方式、發放管道、抽樣方法、蒐集期間、回收份數、排除份數、有效問卷份數與有效回收率須全部保留，數值不得更改。"+(sim?"資料含模擬資料，須寫明實際回收與模擬資料的份數，並說明模擬資料僅供課堂練習。":""));
   const hasD=M.some(x=>x.d==="demo"), hasB=M.some(x=>x.d==="behav");
@@ -453,7 +453,7 @@ function promptText(){
   L.push("- 不得編造【分析結果】中沒有的數值、變數或類別。");
   L.push("");
   L.push("三、輸出格式");
-  L.push("第一行為標題「樣本結構」，接著依序輸出：資料蒐集與回收段落／"+secs.map((t,i)=>"（"+"一二"[i]+"）"+t+"／（段落）").join("／")+"／〔插入表1〕（「／」代表換行）。表格位置標記「〔插入表N〕」必須單獨成一行輸出，不可省略、不可改寫，也不可併入段落文字。");
+  L.push("第一行為標題「樣本結構分析」，接著依序輸出：資料蒐集與回收段落／"+secs.map((t,i)=>"（"+"一二"[i]+"）"+t+"／（段落）").join("／")+"／〔插入表1〕（「／」代表換行）。表格位置標記「〔插入表N〕」必須單獨成一行輸出，不可省略、不可改寫，也不可併入段落文字。");
   L.push("");
   L.push("=====================");
   L.push("【分析結果】");
@@ -478,7 +478,7 @@ async function copyHTML(full,name){
   catch(e){ box.style.position="fixed"; box.style.left="-9999px"; document.body.appendChild(box); const rg=document.createRange(); rg.selectNodeContents(box); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); try{ document.execCommand("copy"); toast("已複製"+name); }catch(_){ toast("複製失敗，請手動選取"); } sel.removeAllRanges(); box.remove(); }
 }
 $("btn-copy-t1").addEventListener("click",()=>{ if (!selVars().length) return; const fs="font-family:'Times New Roman','新細明體',serif;"; copyHTML('<p style="'+fs+'font-size:12pt;">表1　樣本結構</p>'+t1HTML(true)+'<p style="'+fs+'font-size:10pt;">'+t1Note()+'</p>',"表1"); });
-$("btn-copy-prompt").addEventListener("click",async()=>{ const t=promptText(); try{ await navigator.clipboard.writeText(t); toast("已複製樣本結構報告指令"); }catch(e){ toast("複製失敗，請展開指令內容手動複製"); } });
+$("btn-copy-prompt").addEventListener("click",async()=>{ const t=promptText(); try{ await navigator.clipboard.writeText(t); toast("已複製樣本結構分析報告指令"); }catch(e){ toast("複製失敗，請展開指令內容手動複製"); } });
 $("btn-xlsx").addEventListener("click",()=>{
   const a1=[["表1　樣本結構"],["變數","類別","次數","百分比"]];
   let curX=null;
