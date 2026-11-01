@@ -507,20 +507,6 @@
   .prompt-peek summary{ cursor:pointer; font-size:12.5px; color:var(--ink-soft); }
   .prompt-peek textarea{ margin-top:6px; background:var(--surface-2); color:var(--ink-soft); }
   .notice-ok{ background:var(--good-soft); color:var(--good); }
-  .pt-fields{ display:grid; gap:10px; margin:6px 0 4px; }
-  .pt-field{ display:grid; grid-template-columns:minmax(0,220px) minmax(0,1fr); gap:4px 12px; align-items:center; font-size:14px; }
-  .pt-field span{ grid-column:1; font-size:12.5px; color:var(--ink-faint); }
-  .pt-field input{ grid-column:2; grid-row:1 / span 2; max-width:420px; font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:6px 9px; }
-  .pt-wide{ margin-top:8px; }
-  .pt-wide input{ grid-row:1; max-width:none; }
-  @media (max-width:620px){ .pt-field{ grid-template-columns:minmax(0,1fr); } .pt-field input{ grid-column:1; grid-row:auto; } }
-  .pt-pick{ display:flex; flex-wrap:wrap; gap:8px; }
-  .pt-pick label{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border-strong); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:14px; }
-  .pt-pick label:has(input:checked){ border-color:var(--accent); background:var(--accent-soft); font-weight:700; }
-  .pt-cap{ margin:16px 0 4px; font-weight:700; }
-  .pt-mv{ white-space:nowrap; }
-  .btn-icon-sm{ font:inherit; font-size:12px; padding:0 6px; margin-left:3px; border:1px solid var(--border-strong); border-radius:5px; background:var(--surface); color:var(--ink); cursor:pointer; }
-  .btn-icon-sm:disabled{ opacity:.4; cursor:not-allowed; }
 
   .short-tbl{ background:var(--surface); }
   .short-tbl td{ vertical-align:middle; }
@@ -581,7 +567,7 @@
   <header class="hero">
     <p class="eyebrow">複選題組 · 主成分分析 · 競爭圖</p>
     <h1>複選題組分析：定義市場範圍</h1>
-    <p class="lede">本工具用於前測問卷，界定市場範圍。上傳問卷回覆後，先整理前測樣本的回收概況與基本資料，再把複選題整理成 (0,1) 資料，挑選選項組成題組。工具會為每個題組計算勾選率與 Pearson 相關係數矩陣，以未轉軸主成分分析萃取前兩個主成分，輸出特徵值、負荷量與競爭圖，也可依區隔變數篩選或並排比較。</p>
+    <p class="lede">本工具用於前測問卷，界定市場範圍（前測樣本的回收概況、基本資料與勾選率，請先以<a href="../sample/">樣本結構分析</a>整理）。上傳問卷回覆後，把複選題整理成 (0,1) 資料，挑選選項組成題組，著重分析選項之間的關係。工具會為每個題組計算勾選率與 Pearson 相關係數矩陣，以未轉軸主成分分析萃取前兩個主成分，輸出特徵值、負荷量與競爭圖，也可依區隔變數篩選或並排比較。</p>
   </header>
 
   <section class="card" id="section-upload">
@@ -706,47 +692,9 @@
     </div>
   </section>
 
-  <section class="card" id="section-pretest" hidden>
-    <div class="card-head">
-      <span class="step-badge">3</span>
-      <div>
-        <h2>前測樣本</h2>
-        <p class="hint">說明前測問卷的資料蒐集與樣本組成，作為報告中「前測樣本」一節的依據。回收份數、有效問卷與篩選條件由問卷資料整理器的「欄名對照表」帶入；發放方式、發放管道與抽樣方法請依實際情形勾選。</p>
-      </div>
-    </div>
-    <div class="pt-fields">
-      <label class="pt-field" for="pt-period">資料蒐集期間<span>例：2026/10/05 至 2026/10/19</span><input type="text" id="pt-period" placeholder="YYYY/MM/DD 至 YYYY/MM/DD"></label>
-      <label class="pt-field" for="pt-target">研究對象（選填）<span>例：曾飲用包裝綠茶的消費者</span><input type="text" id="pt-target"></label>
-    </div>
-    <h3 class="list-h">發放方式</h3>
-    <div class="pt-pick" id="pt-mode"></div>
-    <h3 class="list-h">問卷連結的發放管道（可複選）</h3>
-    <p class="hint small">例如把 Google 表單連結張貼在 Facebook 社團、分享到 LINE 群組，或請親友轉傳，就勾選對應的管道；紙本問卷可勾選「課堂或校園」或在「其他管道」填寫發放地點。</p>
-    <div class="pt-pick" id="pt-chan"></div>
-    <label class="pt-field pt-wide" for="pt-chan-other">其他管道<input type="text" id="pt-chan-other" placeholder="例：系學會 Instagram 限時動態、捷運站前"></label>
-    <h3 class="list-h">抽樣方法（可複選）</h3>
-    <div class="pt-pick" id="pt-samp"></div>
-    <h3 class="list-h">樣本概況</h3>
-    <div id="pt-collect"></div>
-    <h3 class="list-h">基本資料</h3>
-    <p class="hint small">勾選要列入樣本結構表的單選題與是非題（例如性別、年齡、飲用頻率）。類別預設依次數由高到低排列，選項以數字開頭時依數字排序；有自然順序的題目可用 ↑ ↓ 調整。</p>
-    <div class="pt-pick" id="pt-vars"></div>
-    <div id="pt-table-wrap"></div>
-    <div class="row-actions" id="pt-table-actions" hidden>
-      <button class="btn btn-secondary" id="pt-copy-table" type="button">複製表1（貼到 Word）</button>
-    </div>
-    <h3 class="list-h">AI 報告指令：前測樣本</h3>
-    <p class="hint small">指令已自動填入樣本概況與基本資料的次數分配。複製後貼到 AI 對話中，AI 會撰寫「前測樣本」一節。有基本資料表時，前測樣本表為表1，各題組的勾選比例表依序為表2、表3⋯⋯</p>
-    <div class="row-actions tight">
-      <button class="btn btn-primary" id="pt-copy-prompt" type="button">複製前測樣本報告指令</button>
-      <span class="summary" id="pt-prompt-len" style="margin:0;align-self:center"></span>
-    </div>
-    <details class="prompt-peek"><summary>檢視指令內容</summary><textarea id="pt-prompt" readonly rows="10" aria-label="前測樣本報告指令"></textarea></details>
-  </section>
-
   <section class="card" id="section-pca" hidden>
     <div class="card-head">
-      <span class="step-badge">4</span>
+      <span class="step-badge">3</span>
       <div>
         <h2>題組分析：勾選率、主成分與競爭圖</h2>
         <p class="hint">每個題組各自分析：勾選率 → Pearson 相關係數矩陣 → 特徵值 → 未轉軸負荷量 → 競爭圖。建立或修改題組後會自動重新計算。</p>
@@ -759,6 +707,10 @@
           % 的選項不納入分析
         </label>
       </div>
+      <div class="seg-row">
+        <label class="seg-field" for="inc-rate"><input type="checkbox" id="inc-rate"> AI 報告指令包含勾選比例說明與勾選比例表</label>
+      </div>
+      <p class="hint small">預設不包含：各選項的勾選率已在「樣本結構分析」的整體市場消費輪廓中說明，本工具的報告著重選項之間的關係（競爭圖與相關係數）。</p>
       <p class="hint small">依全部受訪者的勾選率判斷，套用到所有題組與區隔；被排除的選項不參與相關矩陣與主成分計算，也不畫進競爭圖。</p>
       <div class="seg-row">
         <label class="seg-field" for="seg-col">區隔變數
@@ -785,193 +737,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="../omv-reader.js"></script>
-<script>
-/* ---------- 前測樣本：回收概況、資料蒐集方式、基本資料次數分配 ---------- */
-window.Pretest = (function(){
-  "use strict";
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const pct1 = x => (x * 100).toFixed(1) + '%';
-  const MODES = ['Google 表單線上問卷', 'SurveyCake 線上問卷', '其他線上問卷平台', '紙本問卷', '線上與紙本問卷併行'];
-  const CHANNELS = ['Facebook', 'Instagram', 'LINE', 'Threads', 'Dcard', 'PTT', 'X（Twitter）', 'Email', '課堂或校園', '親友轉傳'];
-  const SAMPLING = ['便利抽樣', '滾雪球抽樣', '判斷抽樣（立意抽樣）', '配額抽樣', '簡單隨機抽樣'];
-  const P = { headers: [], rows: [], summ: {}, meta: {}, vars: [], sel: new Set(), order: {}, mode: MODES[0], chan: new Set(), samp: new Set(['便利抽樣']), ready: false };
-
-  function load(wb, headers, rows){
-    P.headers = headers || []; P.rows = rows || []; P.summ = {}; P.meta = {}; P.order = {};
-    if (wb && wb.Sheets && wb.Sheets['欄名對照表']){
-      const aoa = XLSX.utils.sheet_to_json(wb.Sheets['欄名對照表'], { header: 1, defval: '', raw: false });
-      const hi = aoa.findIndex(r => r.some(x => String(x).trim() === '新欄名') && r.some(x => String(x).trim() === '類型'));
-      for (let i = 0; i < (hi < 0 ? aoa.length : hi); i++){ const k = String(aoa[i][0] || '').trim(); if (k && k !== '資料整理摘要') P.summ[k] = aoa[i].slice(1); }
-      if (hi >= 0){
-        const h = aoa[hi].map(x => String(x).trim()), cN = h.indexOf('新欄名'), cT = h.indexOf('類型'), cQ = h.indexOf('原題目');
-        aoa.slice(hi + 1).forEach(r => { const n = String(r[cN] || '').trim(); if (n && n !== '（已移除）') P.meta[n] = { type: String(r[cT] || '').trim(), q: String(r[cQ] || '').trim() }; });
-      }
-    }
-    P.vars = [];
-    P.headers.forEach(h => {
-      if (!h || /^id$/i.test(h) || h === '資料來源') return;
-      const m = P.meta[h];
-      let type = m ? m.type : null;
-      if (!type){
-        const vals = P.rows.map(r => String(r[h] == null ? '' : r[h]).trim()).filter(v => v !== '');
-        if (!vals.length) return;
-        if (vals.every(v => v === '0' || v === '1')) return;
-        if (vals.every(v => isFinite(Number(v)))) return;
-        const u = new Set(vals); type = u.size >= 2 && u.size <= 15 ? '單選題' : null;
-      }
-      if (type !== '單選題' && type !== '是非題') return;
-      if (m && m.q === '資料來源') return;
-      const title = (/^[A-Za-z]+\d+$/.test(h) && m && m.q) ? m.q : h;
-      P.vars.push({ key: h, kind: type === '是非題' ? 'yn' : 'cat', title: title });
-    });
-    P.sel = new Set(P.vars.map(v => v.key));
-    $('pt-period').value = P.summ['資料蒐集期間'] ? String(P.summ['資料蒐集期間'][0]) : '';
-    P.ready = true;
-    renderPickers(); render();
-  }
-  function clear(){ P.ready = false; P.headers = []; P.rows = []; P.vars = []; P.sel = new Set(); }
-
-  function sv(k, i){ const r = P.summ[k]; return r ? r[i || 0] : ''; }
-  function joinZh(a){ return a.length <= 1 ? (a[0] || '') : a.slice(0, -1).join('、') + '與' + a[a.length - 1]; }
-  function fmtPeriod(t){
-    const m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})\D+?至\D*?(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(t || '');
-    if (!m) return (t || '').trim();
-    const a = [+m[1], +m[2], +m[3]], b = [+m[4], +m[5], +m[6]];
-    return a[0] + ' 年 ' + a[1] + ' 月 ' + a[2] + ' 日至' + (b[0] !== a[0] ? b[0] + ' 年' : '') + ' ' + b[1] + ' 月 ' + b[2] + ' 日';
-  }
-  function screenTxt(){
-    const note = String(sv('篩選刪除筆數', 1) || '').trim(); if (!note) return '';
-    return note.split('；').map(p => { const m = /排除(.+?)：\s*(\d+)\s*筆/.exec(p); return m ? '篩選題回答' + m[1] + '者 ' + m[2] + ' 份' : ''; }).filter(Boolean).join('、');
-  }
-  function channels(){ const o = ($('pt-chan-other').value || '').trim(); return [...P.chan].concat(o ? [o] : []); }
-  function collectText(){
-    const nValid = P.rows.length, N0 = Number(sv('原始回覆筆數')) || null, removed = Number(sv('篩選刪除筆數')) || 0;
-    const sim = P.summ['模擬資料筆數'] ? Number(sv('模擬資料筆數')) : 0, simNote = String(sv('模擬資料筆數', 1) || '');
-    const real = (simNote.match(/真實資料\s*(\d+)/) || [])[1], simKeep = (simNote.match(/有效樣本中模擬資料\s*(\d+)/) || [])[1];
-    const ch = channels(), paper = /紙本/.test(P.mode) && !/併行/.test(P.mode), tg = ($('pt-target').value || '').trim();
-    let s1 = '前測' + (tg ? '以' + tg + '為對象，' : '') + '以' + P.mode + '進行資料蒐集';
-    if (ch.length) s1 += paper ? '，於' + joinZh(ch) + '發放問卷' : '，將問卷連結發布於' + joinZh(ch);
-    if (P.samp.size) s1 += '，採' + joinZh([...P.samp]) + '選取樣本';
-    const parts = [s1 + '。'];
-    const per = fmtPeriod($('pt-period').value);
-    let s2 = per ? '資料蒐集期間為 ' + per + '，' : '';
-    if (N0){
-      s2 += '共回收 ' + N0 + ' 份問卷' + (sim && real ? '（含實際回收問卷 ' + real + ' 份與課堂練習用模擬資料 ' + sim + ' 份）' : '');
-      const st = screenTxt();
-      s2 += removed ? '；排除' + (st || '不符資格者 ' + removed + ' 份') + '後，有效問卷為 ' + nValid + ' 份，有效回收率為 ' + pct1(nValid / N0) + '。' : '，皆為有效問卷，有效回收率為 100.0%。';
-    } else s2 += '有效問卷共 ' + nValid + ' 份。';
-    parts.push(s2);
-    if (sim && simKeep != null) parts.push('有效問卷中，模擬資料 ' + simKeep + ' 份，僅供課堂練習使用，不得作為研究結果。');
-    return parts.join('');
-  }
-
-  function lead(t){ const m = String(t).match(/^\s*(\d+)\s*[.．、)）]/); return m ? +m[1] : null; }
-  function compute(v){
-    const cnt = new Map(); let miss = 0;
-    P.rows.forEach(r => { let x = String(r[v.key] == null ? '' : r[v.key]).trim(); if (x === ''){ miss++; return; } if (v.kind === 'yn') x = x === '1' ? '是' : (x === '0' ? '否' : x); cnt.set(x, (cnt.get(x) || 0) + 1); });
-    const n = P.rows.length - miss;
-    let keys = [...cnt.keys()];
-    const saved = P.order[v.key];
-    if (saved){ const a = saved.filter(k => cnt.has(k)); keys.forEach(k => { if (!a.includes(k)) a.push(k); }); keys = a; }
-    else if (v.kind === 'yn') keys = ['是', '否'].filter(k => cnt.has(k)).concat(keys.filter(k => k !== '是' && k !== '否'));
-    else if (keys.some(k => lead(k) != null)) keys.sort((x, y) => { const a = lead(x), b = lead(y); if (a == null && b == null) return cnt.get(y) - cnt.get(x); if (a == null) return 1; if (b == null) return -1; return a - b; });
-    else keys.sort((x, y) => cnt.get(y) - cnt.get(x));
-    return { n, miss, rows: keys.map(k => ({ label: k, f: cnt.get(k), p: n ? cnt.get(k) / n : 0 })) };
-  }
-  function model(){ return P.vars.filter(v => P.sel.has(v.key)).map(v => ({ v, r: compute(v) })); }
-  function hasTable(){ return P.ready && model().length > 0; }
-
-  const WS = extra => "font-family:'Times New Roman','新細明體',serif;font-size:12pt;color:#000;padding:2pt 6pt;vertical-align:middle;border:1px solid #000;" + (extra || '');
-  function tableHTML(word){
-    const td = (t, al, extra) => word ? '<td' + (extra || '') + ' style="' + WS('text-align:' + (al || 'center') + ';') + '">' + t + '</td>' : '<td' + (extra || '') + (al === 'left' ? '' : ' class="num"') + '>' + t + '</td>';
-    const th = t => word ? '<th style="' + WS('text-align:center;font-weight:normal;') + '">' + t + '</th>' : '<th>' + t + '</th>';
-    let h = '<table' + (word ? ' style="border-collapse:collapse;border:1px solid #000;"' : '') + '><thead><tr>' + th('變數') + th('類別') + th('次數') + th('百分比') + '</tr></thead><tbody>';
-    model().forEach(({ v, r }) => {
-      const rs = r.rows.length > 1 ? ' rowspan="' + r.rows.length + '"' : '';
-      r.rows.forEach((x, i) => {
-        h += '<tr>';
-        if (i === 0) h += td(esc(v.title) + (r.miss ? '<br>（未作答 ' + r.miss + ' 人）' : ''), 'left', rs);
-        let lab = esc(x.label);
-        if (!word && v.kind === 'cat' && r.rows.length > 1) lab += ' <span class="pt-mv"><button type="button" class="btn-icon-sm" data-pt-up="' + esc(v.key) + '" data-i="' + i + '" aria-label="上移"' + (i === 0 ? ' disabled' : '') + '>↑</button><button type="button" class="btn-icon-sm" data-pt-down="' + esc(v.key) + '" data-i="' + i + '" aria-label="下移"' + (i === r.rows.length - 1 ? ' disabled' : '') + '>↓</button></span>';
-        h += td(lab, 'left') + td(String(x.f)) + td(pct1(x.p)) + '</tr>';
-      });
-    });
-    return h + '</tbody></table>';
-  }
-  function note(){
-    let s = '註：有效樣本 n = ' + P.rows.length + '。';
-    if (model().some(x => x.r.miss)) s += '有未作答者的題目，百分比以該題作答人數為分母。';
-    if (P.summ['模擬資料筆數']) s += '本資料含課堂練習用模擬資料，不得作為研究結果。';
-    return s;
-  }
-  function promptText(){
-    const M = model(), sim = !!P.summ['模擬資料筆數'];
-    const L = ['請根據下方【分析結果】，撰寫研究報告中的「前測樣本」一節。前測問卷用於界定市場範圍（例如品牌、使用情境、通路與媒體接觸），其結果將作為正式問卷設計的依據。', ''];
-    L.push('一、寫作內容（依序撰寫）');
-    L.push('1. 第一段　資料蒐集與回收：以【分析結果】的「樣本概況」為基礎改寫為正式文字，發放方式、發放管道、抽樣方法、蒐集期間、回收份數、排除份數、有效問卷份數與有效回收率須全部保留，數值不得更改。' + (sim ? '資料含模擬資料，須寫明實際回收與模擬資料的份數，並說明模擬資料僅供課堂練習。' : ''));
-    if (M.length) L.push('2. 第二段　樣本組成：先以一句話說明前測樣本的基本資料整理如表1所示，再描述各變數比例最高的類別及其百分比，必要時補充次高者；有自然順序的類別（例如頻率、年齡層）可合併相鄰類別概括分布。以一段文字完成，最後以一句話概括前測樣本以哪些消費者為主。');
-    L.push('');
-    L.push('二、寫作規則');
-    L.push('- 採正式學術報告文體，以繁體中文撰寫，以完整段落呈現，不使用條列；用詞一律使用「變數」，不得使用「變項」。');
-    L.push('- 百分比取小數點後一位。只描述樣本，不推論母體，也不評論樣本是否具有代表性。');
-    if (M.length) L.push('- 表1 由分析工具產生，不需輸出表格，只需在內文引用；在第一次以「如表1所示」引用表1的段落之後，另起一行單獨輸出「〔插入表1〕」，供研究者貼上表格。');
-    L.push('- 不得編造【分析結果】中沒有的數值、變數或類別。');
-    L.push('');
-    L.push('三、輸出格式');
-    L.push('第一行為標題「前測樣本」，接著依序輸出各段文字；有表1時，在以「如表1所示」引用表1的段落之後，單獨一行輸出「〔插入表1〕」。表格位置標記「〔插入表N〕」必須單獨成一行輸出，不可省略、不可改寫，也不可併入段落文字。');
-    L.push('', '=====================', '【分析結果】', '=====================');
-    L.push('樣本概況：' + collectText());
-    L.push('有效樣本數：' + P.rows.length);
-    if (M.length){
-      L.push('', '表1　前測樣本結構（次數，百分比）：');
-      M.forEach(({ v, r }) => L.push('- ' + v.title + (r.miss ? '（作答 ' + r.n + ' 人，未作答 ' + r.miss + ' 人）' : '') + '：' + r.rows.map(x => x.label + ' ' + x.f + ' 人（' + pct1(x.p) + '）').join('、')));
-    }
-    return L.join('\n');
-  }
-
-  function pickHTML(list, isSel, name, radio){ return list.map(t => '<label><input type="' + (radio ? 'radio' : 'checkbox') + '" name="' + name + '" data-v="' + esc(t) + '"' + (isSel(t) ? ' checked' : '') + '> ' + esc(t) + '</label>').join(''); }
-  function renderPickers(){
-    $('pt-mode').innerHTML = pickHTML(MODES, t => t === P.mode, 'pt-mode', true);
-    $('pt-chan').innerHTML = pickHTML(CHANNELS, t => P.chan.has(t), 'pt-chan');
-    $('pt-samp').innerHTML = pickHTML(SAMPLING, t => P.samp.has(t), 'pt-samp');
-  }
-  function render(){
-    if (!P.ready) return;
-    $('pt-collect').innerHTML = '<div class="notice notice-ok">' + esc(collectText()) + '</div>' + (Object.keys(P.summ).length ? '' : '<div class="notice notice-warn">找不到問卷資料整理器的「欄名對照表」，回收份數與篩選資訊無法帶入；建議上傳整理器下載的 Excel 檔。</div>');
-    $('pt-vars').innerHTML = P.vars.length ? P.vars.map(v => '<label><input type="checkbox" name="pt-var" data-v="' + esc(v.key) + '"' + (P.sel.has(v.key) ? ' checked' : '') + '> ' + esc(v.title) + '</label>').join('') : '<p class="hint small">資料中沒有可列入的單選題或是非題。</p>';
-    const M = model();
-    $('pt-table-actions').hidden = !M.length;
-    $('pt-table-wrap').innerHTML = M.length ? '<p class="pt-cap">表1　前測樣本結構</p><div class="table-scroll">' + tableHTML(false) + '</div><p class="hint small">' + esc(note()) + '</p>' : '';
-    $('pt-table-wrap').querySelectorAll('[data-pt-up],[data-pt-down]').forEach(b => b.addEventListener('click', () => {
-      const key = b.dataset.ptUp || b.dataset.ptDown, v = P.vars.find(x => x.key === key), i = +b.dataset.i, cur = compute(v).rows.map(x => x.label);
-      const j = b.dataset.ptUp ? i - 1 : i + 1; if (j < 0 || j >= cur.length) return; [cur[i], cur[j]] = [cur[j], cur[i]]; P.order[key] = cur; render();
-    }));
-    const t = promptText(); $('pt-prompt').value = t; $('pt-prompt-len').textContent = '共 ' + t.length.toLocaleString() + ' 字';
-    document.dispatchEvent(new CustomEvent('pretest-change'));
-  }
-  function toast(m){ const el = $('toast'); if (!el) return; el.textContent = m; el.className = 'toast show'; clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2600); }
-  async function copyRich(full, name){
-    const box = document.createElement('div'); box.innerHTML = full; const text = box.innerText;
-    try{ await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([full], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]); toast('已複製' + name + '，可直接貼到 Word'); }
-    catch(e){ box.style.position = 'fixed'; box.style.left = '-9999px'; document.body.appendChild(box); const rg = document.createRange(); rg.selectNodeContents(box); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); try{ document.execCommand('copy'); toast('已複製' + name); }catch(_){ toast('複製失敗，請手動選取'); } s.removeAllRanges(); box.remove(); }
-  }
-
-  document.addEventListener('change', e => {
-    const t = e.target; if (!t.name || t.name.indexOf('pt-') !== 0) return;
-    if (t.name === 'pt-mode') P.mode = t.dataset.v;
-    else if (t.name === 'pt-chan') t.checked ? P.chan.add(t.dataset.v) : P.chan.delete(t.dataset.v);
-    else if (t.name === 'pt-samp') t.checked ? P.samp.add(t.dataset.v) : P.samp.delete(t.dataset.v);
-    else if (t.name === 'pt-var') t.checked ? P.sel.add(t.dataset.v) : P.sel.delete(t.dataset.v);
-    render();
-  });
-  ['pt-period', 'pt-target', 'pt-chan-other'].forEach(id => $(id).addEventListener('input', render));
-  $('pt-copy-table').addEventListener('click', () => { const fs = "font-family:'Times New Roman','新細明體',serif;"; copyRich('<p style="' + fs + 'font-size:12pt;">表1　前測樣本結構</p>' + tableHTML(true) + '<p style="' + fs + 'font-size:10pt;">' + note() + '</p>', '表1'); });
-  $('pt-copy-prompt').addEventListener('click', async () => { try{ await navigator.clipboard.writeText(promptText()); toast('已複製前測樣本報告指令'); }catch(e){ toast('複製失敗，請展開指令內容手動複製'); } });
-
-  return { load, clear, hasTable };
-})();
-</script>
 <script>
 (function(){
   "use strict";
@@ -1159,7 +924,6 @@ window.Pretest = (function(){
       const parsed = parseCSV(text);
       if (!parsed.headers.length){ toast('無法解析此 CSV 檔案，請確認格式', 'error'); return; }
       state.csv = { headers: parsed.headers, rows: parsed.rows, filename: state.csvFileName };
-      if (window.Pretest) Pretest.load(null, parsed.headers, parsed.rows);
       document.getElementById('dropzone-label').textContent = '已上傳：' + state.csvFileName + '（' + parsed.rows.length + ' 筆回覆）';
       renderCSVPreview();
       onDataLoaded();
@@ -1215,7 +979,6 @@ window.Pretest = (function(){
     state.currentSheet = sheetName;
     state.importNames = readGroupSheet(wb);
     state.stems = readStemSheet(wb);
-    if (window.Pretest) Pretest.load(wb, headers, dataRows);
     document.getElementById('dropzone-label').textContent = '已上傳：' + state.csvFileName + '（' + dataRows.length + ' 筆回覆）';
     renderCSVPreview();
     onDataLoaded();
@@ -2045,7 +1808,6 @@ window.Pretest = (function(){
     document.getElementById('section-dummy').hidden = true;
     document.getElementById('section-groups').hidden = !has;
     document.getElementById('section-pca').hidden = !state.dummy;
-    document.getElementById('section-pretest').hidden = !has;
   }
 
   function onDataLoaded(){
@@ -2063,7 +1825,6 @@ window.Pretest = (function(){
     if (reuse) toast('已套用先前對這份問卷的設定', 'success');
   }
   function onDataCleared(){
-    if (window.Pretest) Pretest.clear();
     state.native = [];
     document.getElementById('raw-warn').innerHTML = '';
     state.mcCands = [];
@@ -2088,7 +1849,6 @@ window.Pretest = (function(){
       return o;
     });
     state.csv = { headers: headers, rows: rows, filename: SAMPLE.file };
-    if (window.Pretest) Pretest.load(null, headers, rows);
     state.csvRawBuffer = null; state.xlsxWorkbook = null; state.currentSheet = null;
     state.csvFileName = SAMPLE.file;
     document.getElementById('encoding-row').hidden = true;
@@ -3151,9 +2911,18 @@ window.Pretest = (function(){
     L.push('', '（E）皮爾森相關係數：');
     L.push('- 正相關最高的配對：' + (cp.pos.length ? cp.pos.map(p => p.a + '－' + p.b + '（r = ' + apaR(p.r) + '）').join('；') : '無'));
     L.push('- 負相關最強的配對：' + (cp.neg.length ? cp.neg.map(p => p.a + '－' + p.b + '（r = ' + apaR(p.r) + '）').join('；') : '無'));
-    const tOff = (window.Pretest && Pretest.hasTable()) ? 1 : 0; /* 前測樣本表為表1 時，題組表順延 */
-    L.push('', '（F）表圖編號：表' + (no + tOff) + '、圖' + no);
-    return L.join('\n');
+    L.push('', '（F）表圖編號：表' + no + '、圖' + no);
+    let out = L.join('\n');
+    const incRate = document.getElementById('inc-rate') && document.getElementById('inc-rate').checked;
+    if (!incRate){
+      /* 勾選率已在樣本結構分析說明：不寫勾選比例段落與勾選比例表，著重選項之間的關係 */
+      out = out.replace('　節標題（一行）→ 勾選比例說明段落 → 表標題 → 表位置標記 → 圖形說明段落 → 圖位置標記 →', '　節標題（一行）→ 圖形說明段落 → 圖位置標記 →')
+        .replace('- 除節標題、表標題與圖標題之外，不加任何小標題或編號。本提示詞中的「勾選比例說明段落」\n  「圖形說明段落」', '- 除節標題與圖標題之外，不加任何小標題或編號。本提示詞中的\n  「圖形說明段落」');
+      const a = out.indexOf('【勾選比例說明段落】'), b = out.indexOf('【圖形說明段落】');
+      if (a >= 0 && b > a) out = out.slice(0, a) + '【勾選比例】\n- 各選項的勾選比例已在「樣本結構分析」中說明，本報告不另寫勾選比例段落，也不輸出表標題與「〔插入表N〕」；\n  直接從圖形說明段落開始。解讀時仍可引用資料（C）的勾選比例作為依據，以百分比表示、取到整數。\n\n' + out.slice(b);
+      out = out.replace(/（F）表圖編號：表\d+、圖(\d+)/, '（F）圖編號：圖$1').replace('- 表圖編號：依資料（F）。', '- 圖編號：依資料（F）。');
+    }
+    return out;
   }
 
 
