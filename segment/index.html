@@ -1567,10 +1567,11 @@ function renderProfile(keepPicker){
     const g=new Map(); bins.forEach(x=>{ const k=x.pc.prefix||"__"; if (!g.has(k)) g.set(k,[]); g.get(k).push(x); });
     for (const [key,list] of g){
       html+='<h3>'+esc(key!=="__"&&S.groupNames[key]?S.groupNames[key]+"（"+key+"）":(key==="__"?"複選題":"代碼 "+key))+'：勾選者的區隔分布</h3><div class="table-scroll"><table><thead><tr><th class="l">選項（勾選者）</th>'+headP+'<th>χ²</th><th>p</th></tr></thead><tbody>';
+      { const x0=list[0]; html+='<tr class="total"><td class="l">全體（各區隔比例）</td>'+x0.share.map(v=>'<td>'+(v==null?"—":pct1(v))+'</td>').join("")+'<td>'+x0.n+'</td><td colspan="2"></td></tr>'; }
       list.forEach(x=>{ const row=x.rows[0], t=x.test;
         html+='<tr'+(x.sig?' class="sigrow"':'')+'><td class="l">'+esc(x.pc.name)+smallTag(row)+'</td>'+row.pct.map((v,gi)=>'<td class="'+(row.mark[gi]>0?"up":row.mark[gi]<0?"down":"")+'">'+(v==null?"—":pct1(v))+markTxt(row.mark[gi])+'</td>').join("")+'<td>'+row.n+'</td>'
           +(t?'<td>'+t.chi.toFixed(2)+'</td><td>'+pTxtShort(t.p)+'</td>':'<td colspan="2">無法計算</td>')+'</tr>'; });
-      const x0=list[0]; html+='<tr class="total"><td class="l">全體（各區隔比例）</td>'+x0.share.map(v=>'<td>'+(v==null?"—":pct1(v))+'</td>').join("")+'<td>'+x0.n+'</td><td colspan="2"></td></tr></tbody></table></div>';
+      html+='</tbody></table></div>';
     }
   }
   /* 單選題 */
@@ -1578,11 +1579,12 @@ function renderProfile(keepPicker){
     const t=x.test;
     html+='<h3>'+esc(profLabel(x.pc))+'<span class="testtxt'+(x.sig?" sig":"")+'">'+(t?'χ²('+t.df+') = '+t.chi.toFixed(2)+'，'+pTxt(t.p):'無法計算')+(t&&t.lowExp>.2?'；期望次數小於 5 的格子占 '+pct1(t.lowExp):'')+'</span></h3>';
     html+='<div class="table-scroll"><table><thead><tr><th class="l">類別</th>'+headP+'</tr></thead><tbody>';
+    html+='<tr class="total"><td class="l">全體（各區隔比例）</td>'+x.share.map(v=>'<td>'+(v==null?"—":pct1(v))+'</td>').join("")+'<td>'+x.n+'</td></tr>';
     x.rows.forEach(row=>{ html+='<tr><td class="l">'+esc(row.level)+smallTag(row)+'</td>'+row.pct.map((v,gi)=>'<td class="'+(row.mark[gi]>0?"up":row.mark[gi]<0?"down":"")+'">'+(v==null?"—":pct1(v))+markTxt(row.mark[gi])+'</td>').join("")+'<td>'+row.n+'</td></tr>'; });
-    html+='<tr class="total"><td class="l">全體（各區隔比例）</td>'+x.share.map(v=>'<td>'+(v==null?"—":pct1(v))+'</td>').join("")+'<td>'+x.n+'</td></tr></tbody></table></div>';
+    html+='</tbody></table></div>';
   });
   if (!shown.length&&chiL.length) html+='<p class="hint">沒有達顯著水準的變數。</p>';
-  html+='<p class="hint small">輪廓變數為 X、市場區隔為 Y：每一列的百分比為該類別（或勾選該選項）的受訪者分布在各區隔的比例（以輪廓變數為條件，列合計 100%），請與最下方「全體（各區隔比例）」比較。整體檢定達顯著時，▲／▽表示該格的提升指數（觀察次數 ÷ 期望次數 × 100）≥ '+IDX_HI+' 或 ≤ '+IDX_LO+'，即該類別的受訪者落在該區隔的比例明顯高於或低於全體；提升指數 = 該區隔佔特定輪廓組別的比例 ÷ 該區隔佔全體的比例 × 100。類別人數未達 '+MIN_N+' 人者標示「人數少」，其百分比與指數變動大，僅供參考。</p>';
+  html+='<p class="hint small">輪廓變數為 X、市場區隔為 Y：每一列的百分比為該類別（或勾選該選項）的受訪者分布在各區隔的比例（以輪廓變數為條件，列合計 100%），請與最上方「全體（各區隔比例）」比較。整體檢定達顯著時，▲／▽表示該格的提升指數（觀察次數 ÷ 期望次數 × 100）≥ '+IDX_HI+' 或 ≤ '+IDX_LO+'，即該類別的受訪者落在該區隔的比例明顯高於或低於全體；提升指數 = 該區隔佔特定輪廓組別的比例 ÷ 該區隔佔全體的比例 × 100。類別人數未達 '+MIN_N+' 人者標示「人數少」，其百分比與指數變動大，僅供參考。</p>';
   $("prof-out").innerHTML=html;
 }
 function ghTxt(d){ const hi=d.diff>0?d.i:d.j, lo=d.diff>0?d.j:d.i; return "集群"+(hi+1)+" > 集群"+(lo+1)+"（"+pTxt(d.p)+"）"; }
