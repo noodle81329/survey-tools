@@ -100,6 +100,8 @@ ol.steps{margin:0 0 12px;padding-left:22px;font-size:14px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
 .toast.show{opacity:1}
 .faint{color:var(--ink-faint)}
+.chartbox{border:none}
+.chartbox svg{display:block;max-width:none}
 .fa1 td.c,.fa1 th{text-align:center;vertical-align:middle;white-space:nowrap}
 .fa1 td,.fa1 th{border:1px solid var(--border-strong)}
 .fa1 td.l{white-space:normal;min-width:260px}
@@ -187,14 +189,14 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
   <!-- 3 選擇變數 -->
   <section class="panel" id="sec-vars" aria-labelledby="h3s" hidden>
     <h2 id="h3s"><span class="step">3</span>選擇變數</h2>
-    <p class="hint">單選題分為「人口統計變數」與「消費行為」兩組，列入表1：問卷最後一部分（最後一個量表題或複選題之後）的單選題歸入人口統計變數，其餘歸入消費行為；分錯時可用「移到……」按鈕調整。複選題組，以及同一代碼的多個是非題（例如曾喝過的品牌），每組各製作一張勾選情形表（表2 起）。量表題留給因素分析，開放式文字題也不列入。</p>
+    <p class="hint">單選題分為「人口統計變數」與「消費行為」兩組，列入表1：問卷最後一部分（最後一個量表題或複選題之後）的單選題歸入人口統計變數，其餘歸入消費行為；分錯時可用「移到……」按鈕調整。複選題組，以及同一代碼的多個是非題（例如曾喝過的品牌），每組各畫一張直條圖（圖1 起）。量表題留給因素分析，開放式文字題也不列入。</p>
     <div class="groups" id="var-pick"></div>
   </section>
 
   <!-- 4 樣本結構表 -->
   <section class="panel" id="sec-table" aria-labelledby="h4s" hidden>
-    <h2 id="h4s"><span class="step">4</span>樣本結構與整體市場消費輪廓表</h2>
-    <p class="hint">表1 列出單選題與是非題，依「人口統計變數」「消費行為」分組；類別預設依次數由高到低排列，選項以數字開頭時依數字排序，「飲用頻率」這類有自然順序的題目可用 ↑ ↓ 調整。表2 起每個複選題組各一張表，依勾選率由高到低排列，勾選率以有效樣本數為分母。</p>
+    <h2 id="h4s"><span class="step">4</span>樣本結構表與整體市場消費輪廓圖</h2>
+    <p class="hint">表1 列出單選題與是非題，依「人口統計變數」「消費行為」分組；類別預設依次數由高到低排列，選項以數字開頭時依數字排序，「飲用頻率」這類有自然順序的題目可用 ↑ ↓ 調整。每個複選題組各畫一張直條圖（圖1 起），依比例由高到低排列，比例以有效樣本數為分母；圖片不含圖稱，圖稱由報告寫在插入位置下方。</p>
     <div id="tables-out"></div>
     <div class="row">
       <button type="button" id="btn-xlsx">下載 Excel（全部表格）</button>
@@ -398,7 +400,7 @@ function renderPickers(){
 }
 function renderVarPick(){
   const item=v=>'<label><input type="checkbox" data-key="'+esc(v.key)+'"'+(S.sel.has(v.key)?" checked":"")+'><span>'+esc(v.title)+(v.kind==="num"?'<span class="stem">（數值）</span>':"")+(v.kind==="mc"?'<span class="stem">（'+v.cols.length+' 個選項）</span>':"")+(v.q&&v.q!==v.title?'<br><span class="stem">'+esc(v.q)+'</span>':"")+(v.kind==="mc"?"":'<br><button type="button" class="ghost dimbtn" data-dim="'+esc(v.key)+'">移到「'+(dimOf(v)==="demo"?"消費行為":"人口統計變數")+'」</button>')+'</span></label>';
-  $("var-pick").innerHTML=DIMS.concat([["mc","複選題組（每組一張表）"]]).map(([d,t])=>{ const L=S.vars.filter(v=>dimOf(v)===d);
+  $("var-pick").innerHTML=DIMS.concat([["mc","複選題組（每組一張圖）"]]).map(([d,t])=>{ const L=S.vars.filter(v=>dimOf(v)===d);
     return '<div class="grp"><div class="grp-head"><strong>'+t+'</strong><span class="tag">'+L.length+' 題</span>'+(L.length?'<button type="button" class="ghost" data-all="'+d+'">全選</button><button type="button" class="ghost" data-none="'+d+'">全不選</button>':"")+'</div><div class="items">'+(L.length?L.map(item).join(""):'<span class="stem">（無）</span>')+'</div></div>'; }).join("");
   $("var-pick").querySelectorAll("[data-all],[data-none]").forEach(b=>b.addEventListener("click",()=>{ const d=b.dataset.all||b.dataset.none; S.vars.filter(v=>dimOf(v)===d).forEach(v=>b.dataset.all?S.sel.add(v.key):S.sel.delete(v.key)); renderVarPick(); renderAll(); }));
   $("var-pick").querySelectorAll("[data-dim]").forEach(b=>b.addEventListener("click",e=>{ e.preventDefault(); const v=S.vars.find(x=>x.key===b.dataset.dim); S.dim[v.key]=dimOf(v)==="demo"?"behav":"demo"; renderVarPick(); renderAll(); }));
@@ -407,16 +409,35 @@ function selVars(){ return S.vars.filter(v=>S.sel.has(v.key)); }
 function tableModel(){
   const sel=selVars(); return DIMS.flatMap(([d])=>sel.filter(v=>dimOf(v)===d)).map(v=>({v,r:compute(v),d:dimOf(v)}));
 }
-function mcModel(){ return selVars().filter(v=>v.kind==="mc").map((v,i)=>({v,r:compute(v),no:i+2})); }
+function mcModel(){ return selVars().filter(v=>v.kind==="mc").map((v,i)=>({v,r:compute(v),no:i+1})); }
 function pre(){ return S.stage==="前測問卷"?"前測":""; }
 function t1Cap(){ return "表1　"+pre()+"樣本結構"; }
-function mcCap(x){ return "表"+x.no+"　"+x.v.title+"之勾選情形"; }
+function mcCap(x){ return "圖"+x.no+"　"+x.v.title+"之勾選比例"; }
+/* 複選題組直條圖：依比例由高到低，選項直書，長條上方標示百分比數值；不含圖稱（圖稱由報告寫在插入位置下方） */
+function mcSVG(x){
+  const rows=x.r.rows, cw=42, bw=26, left=40, top=22, ph=200, fs=14;
+  const maxLen=Math.max(1,...rows.map(o=>[...String(o.label)].length)), labH=maxLen*(fs+2)+8;
+  const W=left+rows.length*cw+10, H=top+ph+labH+8, y=p=>top+ph-p*ph;
+  let g="";
+  [0,.25,.5,.75,1].forEach(t=>{ g+='<line x1="'+left+'" y1="'+y(t)+'" x2="'+(W-6)+'" y2="'+y(t)+'" stroke="#e3ded2"/><text x="'+(left-6)+'" y="'+(y(t)+4)+'" font-size="11" fill="#655e4d" text-anchor="end">'+Math.round(t*100)+'%</text>'; });
+  rows.forEach((o,i)=>{ const cx=left+i*cw+cw/2;
+    g+='<rect x="'+(cx-bw/2)+'" y="'+y(o.p)+'" width="'+bw+'" height="'+(y(0)-y(o.p))+'" fill="#28594f" rx="2"/>';
+    g+='<text x="'+cx+'" y="'+(y(o.p)-5)+'" font-size="11" fill="#232019" text-anchor="middle">'+(o.p*100).toFixed(1)+'</text>';
+    [...String(o.label)].forEach((c,k)=>{ g+='<text x="'+cx+'" y="'+(y(0)+8+(k+1)*(fs+2)-3)+'" font-size="'+fs+'" fill="#232019" text-anchor="middle">'+esc(c)+'</text>'; }); });
+  g+='<line x1="'+left+'" y1="'+y(0)+'" x2="'+(W-6)+'" y2="'+y(0)+'" stroke="#655e4d"/>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" font-family="\'Noto Sans TC\',\'PingFang TC\',\'Microsoft JhengHei\',sans-serif"><rect width="100%" height="100%" fill="#fff"/>'+g+'</svg>';
+}
+function svgToPng(svg,cb){
+  const img=new Image(), m=/width="(\d+)" height="(\d+)"/.exec(svg), w=+m[1], h=+m[2], k=3;
+  img.onload=()=>{ const c=document.createElement("canvas"); c.width=w*k; c.height=h*k; const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height); c.toBlob(cb,"image/png"); };
+  img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
 function mcHTML(x,word){
   const td=(t,al)=>word?'<td style="'+W_STYLE("text-align:"+(al||"center")+";")+'">'+t+'</td>':'<td class="'+(al==="left"?"l":"c")+'">'+t+'</td>';
   const th=t=>word?'<th style="'+W_STYLE("text-align:center;font-weight:normal;")+'">'+t+'</th>':'<th>'+t+'</th>';
   return '<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("選項")+th(x.v.yn?"回答「是」人數":"勾選人數")+th(x.v.yn?"比例":"勾選率")+'</tr></thead><tbody>'+x.r.rows.map(o=>'<tr>'+td(esc(o.label),"left")+td(String(o.f))+td(pct1(o.p))+'</tr>').join("")+'</tbody></table>';
 }
-function mcNote(x){ return "註：有效樣本 n = "+S.rows.length+"；"+(x&&x.v.yn?"比例為回答「是」的人數除以有效樣本數":"勾選率為勾選人數除以有效樣本數")+"，依由高到低排列，各選項合計可能超過 100%。"; }
+function mcNote(x){ return "註：有效樣本 n = "+S.rows.length+"；數值為"+(x&&x.v.yn?"回答「是」的人數":"勾選人數")+"除以有效樣本數的百分比，依由高到低排列，各選項合計可能超過 100%。"; }
 const W_STYLE=(extra)=>"font-family:'Times New Roman','新細明體',serif;font-size:12pt;color:#000;padding:2pt 6pt;vertical-align:middle;border:1px solid #000;"+(extra||"");
 function t1HTML(word){
   const M=tableModel();
@@ -454,11 +475,18 @@ function renderAll(){
   $("collect-out").innerHTML='<div class="notice ok">'+esc(collectText())+'</div>';
   let th="";
   if (tableModel().length) th+='<h3>'+esc(t1Cap())+'</h3><div class="table-scroll">'+t1HTML(false)+'</div><p class="hint small">'+esc(t1Note())+'</p><div class="row"><button type="button" class="primary" data-copy="t1">複製表1（貼到 Word）</button></div>';
-  mcModel().forEach(x=>{ th+='<h3>'+esc(mcCap(x))+'</h3><div class="table-scroll">'+mcHTML(x,false)+'</div><p class="hint small">'+esc(mcNote(x))+'</p><div class="row"><button type="button" data-copy="mc'+x.no+'">複製表'+x.no+'（貼到 Word）</button></div>'; });
+  mcModel().forEach(x=>{ th+='<h3>'+esc(mcCap(x))+'</h3><div class="table-scroll chartbox">'+mcSVG(x)+'</div><p class="hint small">'+esc(mcNote(x))+'</p><div class="row"><button type="button" data-img="'+x.no+'">複製圖'+x.no+'（貼到 Word）</button><button type="button" data-png="'+x.no+'">下載 PNG</button></div>'; });
   $("tables-out").innerHTML=th||'<p class="hint">請在步驟 3 至少勾選一個變數。</p>';
   $("tables-out").querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ const fs="font-family:'Times New Roman','新細明體',serif;", k=b.dataset.copy;
     if (k==="t1") copyHTML('<p style="'+fs+'font-size:12pt;">'+t1Cap()+'</p>'+t1HTML(true)+'<p style="'+fs+'font-size:10pt;">'+t1Note()+'</p>',"表1");
     else { const x=mcModel().find(z=>"mc"+z.no===k); copyHTML('<p style="'+fs+'font-size:12pt;">'+esc(mcCap(x))+'</p>'+mcHTML(x,true)+'<p style="'+fs+'font-size:10pt;">'+mcNote(x)+'</p>',"表"+x.no); } }));
+  $("tables-out").querySelectorAll("[data-img],[data-png]").forEach(b=>b.addEventListener("click",()=>{
+    const x=mcModel().find(z=>String(z.no)===(b.dataset.img||b.dataset.png));
+    svgToPng(mcSVG(x),async blob=>{
+      if (b.dataset.png){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=mcCap(x).replace(/\s+/g,"_")+".png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); return; }
+      try{ await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]); toast("已複製圖"+x.no+"，可直接貼到 Word"); }catch(e){ toast("此瀏覽器無法複製圖片，請改用「下載 PNG」"); }
+    });
+  }));
   $("tables-out").querySelectorAll("[data-up],[data-down]").forEach(b=>b.addEventListener("click",()=>{
     const key=b.dataset.up||b.dataset.down, v=S.vars.find(x=>x.key===key), i=+b.dataset.i, cur=compute(v).rows.map(x=>x.label);
     const j=b.dataset.up?i-1:i+1; if (j<0||j>=cur.length) return; [cur[i],cur[j]]=[cur[j],cur[i]]; S.order[key]=cur; renderAll();
@@ -476,14 +504,14 @@ function promptText(){
   L.push("一、寫作內容（依序撰寫）");
   L.push("1. 第一段　資料蒐集與回收：以【分析結果】的「樣本概況」為基礎改寫為正式文字，發放方式、發放管道、抽樣方法、蒐集期間、回收份數、排除份數、有效問卷份數與有效回收率須全部保留，數值不得更改。"+(sim?"資料含模擬資料，須寫明實際回收與模擬資料的份數，並說明模擬資料僅供課堂練習。":""));
   if (hasD||hasB) L.push("2. "+[hasD?no("人口統計變數"):"",hasB?no("消費行為"):""].filter(Boolean).join("、")+"：依【分析結果】表1 的分組各寫一段，第一段開頭以一句話說明樣本的基本資料整理如表1所示。單選題與是非題寫出比例最高的類別及其百分比，必要時再補充次高者；有自然順序的類別（例如頻率、年齡層、所得）可合併相鄰類別概括分布，例如「每週飲用 1 次以上者合計 45.4%」。數值題寫出平均數與標準差。只能描述各組所列的變數，不得把變數移到另一組。");
-  if (MC.length) L.push("3. "+no("整體市場消費輪廓")+"：先以一句話說明以下依各複選題組的勾選率描述整體市場的消費偏好；接著每個題組各寫一段，依表號順序：寫出勾選率最高的前三個選項及其勾選率（例如「購買通路以便利商店最多（82.1%），其次為……」），再點出勾選率明顯偏低的選項，最後以一句話說明這代表整體市場的主流（例如主要通路、主要購買時機、主要接觸媒體）。每段以「如表N所示」引用對應的表格。本節只描述整體市場，不提出行銷策略，也不推論區隔差異。");
+  if (MC.length) L.push("3. "+no("整體市場消費輪廓")+"：先以一句話說明以下依各複選題組的勾選率描述整體市場的消費偏好；接著每個題組各寫一段，依圖號順序：寫出勾選率最高的前三個選項及其勾選率（例如「購買通路以便利商店最多（82.1%），其次為……」），再點出勾選率明顯偏低的選項，最後以一句話說明這代表整體市場的主流（例如主要通路、主要購買時機、主要接觸媒體）。每段以「如圖N所示」引用對應的圖。本節只描述整體市場，不提出行銷策略，也不推論區隔差異。");
   L.push((MC.length?"4":"3")+". 最後以一句話概括"+(P?"前測":"有效")+"樣本與整體市場的輪廓。");
   L.push("");
   L.push("二、寫作規則");
   L.push("- 採正式學術報告文體，以繁體中文撰寫，以完整段落呈現（節標題除外），不使用條列；用詞一律使用「變數」，不得使用「變項」。");
   L.push("- 百分比取小數點後一位；複選題的勾選率以有效樣本數為分母，第一次提到時說明各選項合計可能超過 100%。");
   L.push("- 只描述樣本，不推論母體，也不評論樣本是否具有代表性。");
-  L.push("- 表1"+(MC.length?"至表"+(MC.length+1):"")+" 由分析工具產生，不需輸出表格，只需在內文引用。");
+  L.push("- 表1"+(MC.length?"與圖1"+(MC.length>1?"至圖"+MC.length:""):"")+" 由分析工具產生，不需輸出表格或繪圖，只需在內文引用。");
   L.push("- 不得編造【分析結果】中沒有的數值、變數或類別。");
   L.push("");
   L.push("三、輸出格式");
@@ -491,9 +519,9 @@ function promptText(){
   if (hasD) sk.push(no("人口統計變數"),"（段落）");
   if (hasB) sk.push(no("消費行為"),"（段落）");
   if (hasD||hasB) sk.push("〔插入表1〕");
-  if (MC.length){ sk.push(no("整體市場消費輪廓"),"（開頭一句）"); MC.forEach(x=>sk.push("（"+x.v.title+"段落）","〔插入表"+x.no+"〕")); }
+  if (MC.length){ sk.push(no("整體市場消費輪廓"),"（開頭一句）"); MC.forEach(x=>sk.push("（"+x.v.title+"段落）","〔插入圖"+x.no+"〕",mcCap(x))); }
   sk.push("（結語一句，可併入最後一段）");
-  L.push("依下列骨架輸出，「／」代表換行，括號內為說明，不要照抄："+sk.join("／")+"。節標題與表格位置標記「〔插入表N〕」各自單獨成一行，標記不可省略、不可改寫，也不可併入段落文字。");
+  L.push("依下列骨架輸出，「／」代表換行，括號內為說明，不要照抄："+sk.join("／")+"。節標題、位置標記「〔插入表N〕」「〔插入圖N〕」與圖稱各自單獨成一行；圖稱寫在〔插入圖N〕的下一行。標記與圖稱不可省略、不可改寫，也不可併入段落文字。");
   L.push("");
   L.push("=====================");
   L.push("【分析結果】");
@@ -513,7 +541,7 @@ function promptText(){
   }
   MC.forEach(x=>{
     L.push("");
-    L.push(mcCap(x)+(x.v.q&&x.v.q!==x.v.title?"（原題目：「"+x.v.q+"」）":"")+"（勾選人數，勾選率；依勾選率由高到低）：");
+    L.push(mcCap(x)+(x.v.q&&x.v.q!==x.v.title?"（原題目：「"+x.v.q+"」）":"")+"（人數，百分比；依百分比由高到低）：");
     L.push(x.r.rows.map(o=>o.label+" "+o.f+" 人（"+pct1(o.p)+"）").join("、"));
   });
   return L.join("\n");
@@ -541,7 +569,7 @@ $("btn-xlsx").addEventListener("click",()=>{
   }
   mcModel().forEach(x=>{
     const a=[[mcCap(x)],["選項","勾選人數","勾選率（%）"]].concat(x.r.rows.map(o=>[o.label,o.f,Math.round(o.p*1000)/10])); a.push([]); a.push([mcNote(x)]);
-    const w=XLSX.utils.aoa_to_sheet(a); w["!cols"]=[{wch:24},{wch:10},{wch:12}]; XLSX.utils.book_append_sheet(wb,w,"表"+x.no);
+    const w=XLSX.utils.aoa_to_sheet(a); w["!cols"]=[{wch:24},{wch:10},{wch:12}]; XLSX.utils.book_append_sheet(wb,w,"圖"+x.no+"資料");
   });
   const a2=[["樣本概況"],[collectText()],[],["項目","內容"],["問卷階段",S.stage],["資料蒐集期間",$("in-period").value],["發放方式",S.mode],["發放管道",[...S.chan].concat(($("in-chan-other").value||"").trim()?[$("in-chan-other").value.trim()]:[]).join("、")],["抽樣方法",[...S.samp].join("、")],["原始回覆筆數",sv("原始回覆筆數")],["篩選刪除筆數",sv("篩選刪除筆數"),sv("篩選刪除筆數",1)],["有效樣本數",S.rows.length]];
   if (S.summ["模擬資料筆數"]) a2.push(["模擬資料筆數",sv("模擬資料筆數"),sv("模擬資料筆數",1)]);
