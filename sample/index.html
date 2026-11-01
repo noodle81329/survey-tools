@@ -187,7 +187,7 @@ footer{margin-top:28px;color:var(--ink-faint);font-size:13px}
   <!-- 3 選擇變數 -->
   <section class="panel" id="sec-vars" aria-labelledby="h3s" hidden>
     <h2 id="h3s"><span class="step">3</span>選擇變數</h2>
-    <p class="hint">單選題與是非題分為「人口統計變數」與「消費行為」兩組，列入表1；工具依題目文字自動分組，可用「移到……」按鈕調整。複選題組每組各製作一張勾選情形表（表2 起）。消費動機等量表題通常留給因素分析，預設不納入；開放式文字題不列入。</p>
+    <p class="hint">單選題分為「人口統計變數」與「消費行為」兩組，列入表1：問卷最後一部分（最後一個量表題或複選題之後）的單選題歸入人口統計變數，其餘歸入消費行為；分錯時可用「移到……」按鈕調整。複選題組，以及同一代碼的多個是非題（例如曾喝過的品牌），每組各製作一張勾選情形表（表2 起）。量表題留給因素分析，開放式文字題也不列入。</p>
     <div class="groups" id="var-pick"></div>
   </section>
 
@@ -276,9 +276,9 @@ function parseCodebook(aoa){
 
 /* ---------- 變數分類 ---------- */
 function numOf(v){ if (v===""||v==null) return null; const x=Number(v); return isFinite(x)?x:null; }
-function prefixOf(n){ const m=/^([A-Za-z]+)\d/.exec(n); return m?m[1]:null; }
+function prefixOf(n){ const m=/^([A-Za-z]+)(?=\d|_)/.exec(n); return m?m[1]:null; }
 function buildVars(){
-  const V=[], mcMap=new Map();
+  const V=[], mcMap=new Map(); let lastOther=-1;
   S.headers.forEach((h,ci)=>{
     if (!h||/^id$/i.test(h)) return;
     const m=S.meta[h], vals=S.rows.map(r=>r[ci]), filled=vals.filter(v=>String(v).trim()!=="");
@@ -291,7 +291,9 @@ function buildVars(){
     }
     const hide=h==="資料來源"||(m&&m.q==="資料來源");
     const title=(/^[A-Za-z]+\d+$/.test(h)&&m&&m.q)?m.q:h;
-    if (type==="文字"||type==="id"||hide) return;
+    if (type==="文字"||type==="id"||hide){ if (type==="文字") lastOther=Math.max(lastOther,ci); return; }
+    if (type==="數值／量表"){ lastOther=Math.max(lastOther,ci); return; } /* 量表題留給因素分析，不列入 */
+    if (type==="複選題選項"||type==="0／1 欄") lastOther=Math.max(lastOther,ci);
     if (type==="複選題選項"||type==="0／1 欄"){
       const key=(m&&m.q&&type==="複選題選項")?"mc:"+m.q:"mc:"+(prefixOf(h)||"__bin");
       if (!mcMap.has(key)){ const pf=prefixOf(h); const g={key,kind:"mc",cols:[],title:String((pf&&S.groups[pf])||(m&&m.q)||(pf?"代碼 "+pf:"其他 0／1 欄")).replace(/[（(]\s*可?複選\s*[)）]/g,"").trim(),q:m?m.q:"",order:ci}; mcMap.set(key,g); V.push(g); }
@@ -302,15 +304,23 @@ function buildVars(){
     else if (type==="數值／量表") V.push({key:"num:"+h,kind:"num",ci,title,q:m?m.q:"",order:ci,hide});
     else V.push({key:"cat:"+h,kind:"cat",ci,title,q:m?m.q:"",order:ci,hide});
   });
+  /* 同一代碼的多個是非題（例如 B1原萃、B2純喫茶：曾喝過的品牌）視為一個題組，比照複選題製表 */
+  const byPf=new Map(); V.filter(v=>v.kind==="yn").forEach(v=>{ const pf=prefixOf(S.headers[v.ci]); if (pf){ if (!byPf.has(pf)) byPf.set(pf,[]); byPf.get(pf).push(v); } });
+  byPf.forEach((L,pf)=>{ if (L.length<2) return;
+    const g={key:"mc:yn:"+pf,kind:"mc",cols:L.map(v=>({ci:v.ci,label:(S.meta[S.headers[v.ci]]&&(S.meta[S.headers[v.ci]].short||S.meta[S.headers[v.ci]].opt))||optLabel(S.headers[v.ci])})),title:S.groups[pf]||("代碼 "+pf),q:"",order:L[0].order,yn:true};
+    L.forEach(v=>V.splice(V.indexOf(v),1)); V.push(g); lastOther=Math.max(lastOther,...L.map(v=>v.ci)); });
+  /* 正式問卷的最後一部分為人口統計變數：位於最後一個量表題或複選題之後的單選題、是非題歸入人口統計變數；其餘歸入消費行為 */
+  V.forEach(v=>{ if (v.kind==="cat"||v.kind==="yn") v.auto=v.ci>lastOther?"demo":"behav"; });
+  if (!V.some(v=>v.auto==="demo")) V.forEach(v=>{ if (v.auto) v.auto=DEMO_RE.test(v.title+" "+(v.q||""))?"demo":"behav"; });
   S.vars=V.sort((a,b)=>a.order-b.order);
 }
 const DEMO_RE=/性別|年齡|年紀|年級|學院|科系|系所|職業|職務|工作|行業|所得|收入|薪資|月薪|零用錢|可支配|學歷|教育|居住|住在|地區|縣市|婚姻|家庭|子女|小孩|身分|宗教|出生/;
-function dimOf(v){ if (v.kind==="mc") return "mc"; return S.dim[v.key]||(DEMO_RE.test(v.title+" "+(v.q||""))?"demo":"behav"); }
+function dimOf(v){ if (v.kind==="mc") return "mc"; return S.dim[v.key]||v.auto||"behav"; }
 const DIMS=[["demo","人口統計變數"],["behav","消費行為"]];
 function optLabel(n){ return String(n).replace(/^[A-Za-z]+\d*[\s_\-－—．.、:：]*/,"")||n; }
 
 /* ---------- 計算 ---------- */
-function lead(t){ const m=String(t).match(/^\s*(\d+)\s*[.．、)）]/); return m?+m[1]:null; }
+function lead(t){ const m=String(t).match(/^\s*(\d+)/); return m?+m[1]:null; }
 function catOrder(v,cnt){
   const keys=[...cnt.keys()];
   const saved=S.order[v.key];
@@ -400,9 +410,9 @@ function mcCap(x){ return "表"+x.no+"　"+x.v.title+"之勾選情形"; }
 function mcHTML(x,word){
   const td=(t,al)=>word?'<td style="'+W_STYLE("text-align:"+(al||"center")+";")+'">'+t+'</td>':'<td class="'+(al==="left"?"l":"c")+'">'+t+'</td>';
   const th=t=>word?'<th style="'+W_STYLE("text-align:center;font-weight:normal;")+'">'+t+'</th>':'<th>'+t+'</th>';
-  return '<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("選項")+th("勾選人數")+th("勾選率")+'</tr></thead><tbody>'+x.r.rows.map(o=>'<tr>'+td(esc(o.label),"left")+td(String(o.f))+td(pct1(o.p))+'</tr>').join("")+'</tbody></table>';
+  return '<table'+(word?' style="border-collapse:collapse;border:1px solid #000;"':' class="fa1"')+'><thead><tr>'+th("選項")+th(x.v.yn?"回答「是」人數":"勾選人數")+th(x.v.yn?"比例":"勾選率")+'</tr></thead><tbody>'+x.r.rows.map(o=>'<tr>'+td(esc(o.label),"left")+td(String(o.f))+td(pct1(o.p))+'</tr>').join("")+'</tbody></table>';
 }
-function mcNote(){ return "註：有效樣本 n = "+S.rows.length+"；勾選率為勾選人數除以有效樣本數，依勾選率由高到低排列，各選項合計可能超過 100%。"; }
+function mcNote(x){ return "註：有效樣本 n = "+S.rows.length+"；"+(x&&x.v.yn?"比例為回答「是」的人數除以有效樣本數":"勾選率為勾選人數除以有效樣本數")+"，依由高到低排列，各選項合計可能超過 100%。"; }
 const W_STYLE=(extra)=>"font-family:'Times New Roman','新細明體',serif;font-size:12pt;color:#000;padding:2pt 6pt;vertical-align:middle;border:1px solid #000;"+(extra||"");
 function t1HTML(word){
   const M=tableModel();
@@ -440,11 +450,11 @@ function renderAll(){
   $("collect-out").innerHTML='<div class="notice ok">'+esc(collectText())+'</div>';
   let th="";
   if (tableModel().length) th+='<h3>'+esc(t1Cap())+'</h3><div class="table-scroll">'+t1HTML(false)+'</div><p class="hint small">'+esc(t1Note())+'</p><div class="row"><button type="button" class="primary" data-copy="t1">複製表1（貼到 Word）</button></div>';
-  mcModel().forEach(x=>{ th+='<h3>'+esc(mcCap(x))+'</h3><div class="table-scroll">'+mcHTML(x,false)+'</div><p class="hint small">'+esc(mcNote())+'</p><div class="row"><button type="button" data-copy="mc'+x.no+'">複製表'+x.no+'（貼到 Word）</button></div>'; });
+  mcModel().forEach(x=>{ th+='<h3>'+esc(mcCap(x))+'</h3><div class="table-scroll">'+mcHTML(x,false)+'</div><p class="hint small">'+esc(mcNote(x))+'</p><div class="row"><button type="button" data-copy="mc'+x.no+'">複製表'+x.no+'（貼到 Word）</button></div>'; });
   $("tables-out").innerHTML=th||'<p class="hint">請在步驟 3 至少勾選一個變數。</p>';
   $("tables-out").querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ const fs="font-family:'Times New Roman','新細明體',serif;", k=b.dataset.copy;
     if (k==="t1") copyHTML('<p style="'+fs+'font-size:12pt;">'+t1Cap()+'</p>'+t1HTML(true)+'<p style="'+fs+'font-size:10pt;">'+t1Note()+'</p>',"表1");
-    else { const x=mcModel().find(z=>"mc"+z.no===k); copyHTML('<p style="'+fs+'font-size:12pt;">'+esc(mcCap(x))+'</p>'+mcHTML(x,true)+'<p style="'+fs+'font-size:10pt;">'+mcNote()+'</p>',"表"+x.no); } }));
+    else { const x=mcModel().find(z=>"mc"+z.no===k); copyHTML('<p style="'+fs+'font-size:12pt;">'+esc(mcCap(x))+'</p>'+mcHTML(x,true)+'<p style="'+fs+'font-size:10pt;">'+mcNote(x)+'</p>',"表"+x.no); } }));
   $("tables-out").querySelectorAll("[data-up],[data-down]").forEach(b=>b.addEventListener("click",()=>{
     const key=b.dataset.up||b.dataset.down, v=S.vars.find(x=>x.key===key), i=+b.dataset.i, cur=compute(v).rows.map(x=>x.label);
     const j=b.dataset.up?i-1:i+1; if (j<0||j>=cur.length) return; [cur[i],cur[j]]=[cur[j],cur[i]]; S.order[key]=cur; renderAll();
@@ -526,7 +536,7 @@ $("btn-xlsx").addEventListener("click",()=>{
     const w1=XLSX.utils.aoa_to_sheet(a1); w1["!cols"]=[{wch:22},{wch:26},{wch:8},{wch:8}]; XLSX.utils.book_append_sheet(wb,w1,"表1");
   }
   mcModel().forEach(x=>{
-    const a=[[mcCap(x)],["選項","勾選人數","勾選率（%）"]].concat(x.r.rows.map(o=>[o.label,o.f,Math.round(o.p*1000)/10])); a.push([]); a.push([mcNote()]);
+    const a=[[mcCap(x)],["選項","勾選人數","勾選率（%）"]].concat(x.r.rows.map(o=>[o.label,o.f,Math.round(o.p*1000)/10])); a.push([]); a.push([mcNote(x)]);
     const w=XLSX.utils.aoa_to_sheet(a); w["!cols"]=[{wch:24},{wch:10},{wch:12}]; XLSX.utils.book_append_sheet(wb,w,"表"+x.no);
   });
   const a2=[["樣本概況"],[collectText()],[],["項目","內容"],["問卷階段",S.stage],["資料蒐集期間",$("in-period").value],["發放方式",S.mode],["發放管道",[...S.chan].concat(($("in-chan-other").value||"").trim()?[$("in-chan-other").value.trim()]:[]).join("、")],["抽樣方法",[...S.samp].join("、")],["原始回覆筆數",sv("原始回覆筆數")],["篩選刪除筆數",sv("篩選刪除筆數"),sv("篩選刪除筆數",1)],["有效樣本數",S.rows.length]];
