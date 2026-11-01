@@ -1657,7 +1657,7 @@ function kitT2HTML(word){
     gp.rows.forEach((r,i)=>{
       h+='<tr>';
       const rs=gp.rows.length>1?' rowspan="'+gp.rows.length+'"':"";
-      if (i===0) h+=td(esc(gp.title)+(gp.bin?"<br>（勾選者）":""),"center",rs);
+      if (i===0) h+=td(esc(gp.title)+"","center",rs);
       h+=td(esc(r.label),"left");
       h+=r.row.pct.map((v,g)=>{ const s=v==null?"—":Math.round(v*100)+"%"; return td(r.row.mark[g]>0?"<b><u>"+s+"</u></b>▲":(r.row.mark[g]<0?s+"▽":s)); }).join("");
       /* 卡方值與 p 值：單選題整題一個檢定（跨列合併），複選題每個選項各一個檢定 */
@@ -1670,8 +1670,8 @@ function kitT2HTML(word){
   /* 變異數分析達顯著的量化輪廓變數：各區隔原始平均數，平均數最高（標準化平均數 > 0）者以粗體底線標示 */
   NL.forEach((x,i)=>{
     const t=x.test, top=typeof topG==="function"?topG(x):-1;
-    const nm=isIndex(x.pc)?x.pc.name+"<br>（構念指標）":(String(x.pc.name).replace(/^[A-Za-z]+\d+\s*/,"")||x.pc.name)+"<br>（額外動機）";
-    h+='<tr>'+td(nm)+td("平均數","left")+x.means.map((v,g)=>{ const s=v==null?"—":v.toFixed(2); return td(g===top?"<b><u>"+s+"</u></b>":s); }).join("")+td(t?t.F.toFixed(2):"—")+td(t?esc(pTxtShort(t.p)).replace(" ","&nbsp;"):"—")+'</tr>';
+    const kind=isIndex(x.pc)?"構念指標":"額外動機", nm=isIndex(x.pc)?x.pc.name:(String(x.pc.name).replace(/^[A-Za-z]+\d+\s*/,"")||x.pc.name);
+    h+='<tr>'+td(kind)+td(esc(nm),"left")+x.means.map((v,g)=>{ const s=v==null?"—":v.toFixed(2); return td(g===top?"<b><u>"+s+"</u></b>":s); }).join("")+td(t?t.F.toFixed(2):"—")+td(t?esc(pTxtShort(t.p)).replace(" ","&nbsp;"):"—")+'</tr>';
   });
   return h+'</tbody></table>';
 }
